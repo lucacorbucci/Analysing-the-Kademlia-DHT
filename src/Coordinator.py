@@ -116,55 +116,95 @@ class coordinator():
             boostrapNode: nodo bootstrap
         
         """
+        print joiningNode.id
         position = self.findNode(joiningNode, bootstrapNode)
         routingTable = self.structure[joiningNode.id].routingTable
         res = []
         for i in range(0,self.idLen):
             randomID = self.generateBucketID(i)
             res += self.lookup(bootstrapNode, randomID)
-        
+            print "reee" , res
         results = set(res)
         if(joiningNode.id in res):
             results.remove(joiningNode.id)
-        print results
-        print joiningNode.id
         for id in results:
             node = self.structure[id].node
             position = self.computeDistance(joiningNode.id, id, True)
             if (self.structure[joiningNode.id].routingTable[position].insert(node)):
                 (self.structure[joiningNode.id]).incrementNumContacts()
 
+        print "primo", results
 
+        z = set(results)
+        for nodes in z:
+            destNode = self.structure[nodes].node
+            self.findNode(joiningNode, destNode)
+            tmp = self.lookup(destNode, randomID)
+            z.union(set(tmp))
+
+        for id in z:
+            if(id != joiningNode.id):
+                node = self.structure[id].node
+                position = self.computeDistance(joiningNode.id, id, True)
+                if (routingTable[position].insert(node)):
+                    (self.structure[joiningNode.id]).incrementNumContacts()
+
+        '''
         # Fino a che non trovo o che ho visto tutti i nodi del bucket considerato 
         # oppure che ho riempito il bucket devo fare delle lookup verso quel nodo 
         # e memorizzo un set di dati di nodi che poi inserisco nella mia routing table
         # Però devo tenere per ogni lookup che faccio solamente i migliori k  
+        res = []
+        final = []
         for i in range(0,self.idLen):
-            if(not routingTable[i].isEmpty()):
-                nodes = set(routingTable[i].getNodes)
+            if(not routingTable[i].isEmpty() and not routingTable[i].isFull()):
+                # prendo i nodi che stanno in quella routing table e genero un id random nel bucket i
+                nodes = set(routingTable[i].getNodes())
+                randomID = self.generateBucketID(i)
                 for idNode in nodes:
-                    
+                    res = []
+                    destNode = self.structure[idNode].node
+                    self.findNode(joiningNode, destNode)
+                    res += self.lookup(destNode, randomID)
+                    final += res
+                    nodes = nodes.union(set(res))
+                   
+        
+        for id in final:
+            if(id != joiningNode.id):
+                node = self.structure[id].node
+                position = self.computeDistance(joiningNode.id, id, True)
+                if (routingTable[position].insert(node)):
+                    (self.structure[joiningNode.id]).incrementNumContacts()
+        '''
+        
+
+
 
 
     def lookup(self, node, randomID):
+        print "lookup"
         bucketPosition = self.computeDistance(randomID, node.id, True)
         routingTable = self.structure[node.id].routingTable
         array = []
         if (not routingTable[bucketPosition].isEmpty()):
             array = routingTable[bucketPosition].getNodes()
+            print "array: ", array
         if(len(array)==20):
             return array
         else:
             i = bucketPosition-1
             j = bucketPosition+1
-            while(i>=0 and len(array)<20):
+            while((i>=0 or j<self.idLen) and len(array)<20 ):
+                print i,j,bucketPosition
                 if(i>=0 and len(array)<20):
+                    print routingTable[i].getNodes()
                     if (not routingTable[i].isEmpty()):
-                        array + routingTable[i].getNodes()
+                        array += routingTable[i].getNodes()
                     i -= 1
                 if(j < self.idLen and len(array)<20):
                     if (not routingTable[j].isEmpty()):
-                        array + routingTable[j].getNodes()
+                        array += routingTable[j].getNodes()
                     j += 1
 
         return array
@@ -184,17 +224,17 @@ class coordinator():
         Returns:
             la posizione del joiningNode nella routing table di Bootstrap Node
         """ 
-
+        
         position = self.computeDistance(joiningNode.id,bootstrapNode.id, True)
         #print len(self.structure[bootstrapNode].routingTable)
         #print position
-        self.structure[bootstrapNode.id].routingTable[position].insert(joiningNode)
-        (self.structure[bootstrapNode.id]).incrementNumContacts()
+        if(self.structure[bootstrapNode.id].routingTable[position].insert(joiningNode)):
+            (self.structure[bootstrapNode.id]).incrementNumContacts()
         if(not self.structure.has_key(joiningNode.id)):
             self.addNodeInStructure(joiningNode.id, joiningNode)
 
-        self.structure[joiningNode.id].routingTable[position].insert(bootstrapNode)
-        (self.structure[joiningNode.id]).incrementNumContacts()
+        if(self.structure[joiningNode.id].routingTable[position].insert(bootstrapNode)):
+            (self.structure[joiningNode.id]).incrementNumContacts()
 
         return position
 
@@ -273,7 +313,9 @@ class coordinator():
         Funzione di debug usata per la stampa delle routing table
         """
 
-        print "Length of the structure: ", (len(self.structure))
+        print ""
+        print ""
+        print ""
         for key, value in self.structure.iteritems():
             print "ID", key 
             print value.printRoutingTable()

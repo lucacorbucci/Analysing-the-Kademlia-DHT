@@ -20,7 +20,7 @@ else:
     coordinator = coordinator(numNodes, idLen)
     
 
-
+    
     # Per n-1 volte deve essere eseguita la fase di costruzione della
     # routing table.
     for i in range(numNodes-1):
@@ -28,6 +28,7 @@ else:
         joiningNode = coordinator.generateNode(idLen)      
         # Calcolo del nodo bootstrap
         bootstrapNode = coordinator.generateBootstrapNode()
+        print ""
         print "bootstrap", bootstrapNode.id
         # Inserimento del nuovo nodo nella rete
         coordinator.join(joiningNode, bootstrapNode)
