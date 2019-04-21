@@ -1051,6 +1051,7 @@ table {
   <ul>
     <li class="mono"><a href="#src.RoutingTable.RoutingTable.__init__">__init__</a></li>
     <li class="mono"><a href="#src.RoutingTable.RoutingTable.decrementNumContacts">decrementNumContacts</a></li>
+    <li class="mono"><a href="#src.RoutingTable.RoutingTable.getRoutingTable">getRoutingTable</a></li>
     <li class="mono"><a href="#src.RoutingTable.RoutingTable.incrementNumContacts">incrementNumContacts</a></li>
     <li class="mono"><a href="#src.RoutingTable.RoutingTable.printRoutingTable">printRoutingTable</a></li>
   </ul>
@@ -1101,7 +1102,6 @@ table {
 <span class="sd">            bucketListLen: indica la lunghezza di ogni kBucketList</span>
 <span class="sd">            node: il nodo associato a questa routing table</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1124,9 +1124,18 @@ table {
         
         <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
-                <span class="k">pass</span>
+                <span class="k">print</span> <span class="s2">&quot;---&quot;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">kbucket</span><span class="o">.</span><span class="n">printKBucketList</span><span class="p">()</span>
+                <span class="k">print</span> <span class="s2">&quot;****&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
+
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span>
 </pre></div>
 
   </div>
@@ -1171,7 +1180,6 @@ rete kademlia.</p>
 <span class="sd">            bucketListLen: indica la lunghezza di ogni kBucketList</span>
 <span class="sd">            node: il nodo associato a questa routing table</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1194,9 +1202,18 @@ rete kademlia.</p>
         
         <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
-                <span class="k">pass</span>
+                <span class="k">print</span> <span class="s2">&quot;---&quot;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">kbucket</span><span class="o">.</span><span class="n">printKBucketList</span><span class="p">()</span>
+                <span class="k">print</span> <span class="s2">&quot;****&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
+
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span>
 </pre></div>
 
   </div>
@@ -1303,6 +1320,30 @@ rete kademlia.</p>
   
             
   <div class="item">
+    <div class="name def" id="src.RoutingTable.RoutingTable.getRoutingTable">
+    <p>def <span class="ident">getRoutingTable</span>(</p><p>self, graph)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.RoutingTable.RoutingTable.getRoutingTable', this);">Show source &equiv;</a></p>
+  <div id="source-src.RoutingTable.RoutingTable.getRoutingTable" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
+        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nodes</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="src.RoutingTable.RoutingTable.incrementNumContacts">
     <p>def <span class="ident">incrementNumContacts</span>(</p><p>self)</p>
     </div>
@@ -1343,9 +1384,10 @@ rete kademlia.</p>
     
     <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
-            <span class="k">pass</span>
+            <span class="k">print</span> <span class="s2">&quot;---&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">kbucket</span><span class="o">.</span><span class="n">printKBucketList</span><span class="p">()</span>
+            <span class="k">print</span> <span class="s2">&quot;****&quot;</span>
 </pre></div>
 
   </div>

@@ -1040,11 +1040,8 @@ table {
   <div id="sidebar">
     <h1>Index</h1>
     <ul id="index">
-    <h1><a href="index.html">Home</a></h1>
-    <ul id="index">   
-    <li class="mono"></li>
-    
-    
+
+
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
@@ -1052,17 +1049,19 @@ table {
         
           
   <ul>
-    <li class="mono"><a href="#src.Coordinator.coordinator.generateIP">generateIP</a></li>
-    <li class="mono"><a href="#src.Coordinator.coordinator.generateId">generateId</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.__init__">__init__</a></li>
+    <li class="mono"><a href="#src.Coordinator.coordinator.addNodeInRoutingTable">addNodeInRoutingTable</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.addNodeInStructure">addNodeInStructure</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.computeDistance">computeDistance</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.debug">debug</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.findNode">findNode</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.generateBootstrapNode">generateBootstrapNode</a></li>
+    <li class="mono"><a href="#src.Coordinator.coordinator.generateBucketID">generateBucketID</a></li>
+    <li class="mono"><a href="#src.Coordinator.coordinator.generateId">generateId</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.generateNode">generateNode</a></li>
+    <li class="mono"><a href="#src.Coordinator.coordinator.getAllData">getAllData</a></li>
     <li class="mono"><a href="#src.Coordinator.coordinator.join">join</a></li>
-    <li class="mono"><a href="#src.Coordinator.coordinator.nodeLookup">nodeLookup</a></li>
+    <li class="mono"><a href="#src.Coordinator.coordinator.lookup">lookup</a></li>
   </ul>
 
         </li>
@@ -1093,7 +1092,8 @@ table {
 <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span>
 <span class="kn">from</span> <span class="nn">Crypto.Hash</span> <span class="kn">import</span> <span class="n">SHAKE256</span>
 <span class="kn">from</span> <span class="nn">binascii</span> <span class="kn">import</span> <span class="n">hexlify</span>
-
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span>
+<span class="kn">from</span> <span class="nn">Exceptions</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="nb">reload</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
@@ -1112,7 +1112,7 @@ table {
 <span class="sd">        idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Init della classe Coordinator.</span>
 
@@ -1126,27 +1126,35 @@ table {
 <span class="sd">        Arguments:</span>
 <span class="sd">            numNodes: numero di nodi che faranno parte della rete</span>
 <span class="sd">            idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
-<span class="sd">        </span>
+<span class="sd">            maxBucketList: lunghezza massima dei bucketList</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numNodes</span> <span class="o">=</span> <span class="n">numNodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="o">=</span> <span class="n">idLen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span> <span class="o">=</span> <span class="n">maxBucketList</span>
 
         <span class="c1"># Generazione del primo nodo che entra nella rete</span>
-        <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">firstNode</span><span class="p">)</span>
+        <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="n">idLen</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">firstNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">firstNode</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">duplicateNode</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s2">&quot;Impossibile inserire il nodo nella rete. ID già presente&quot;</span>
         
     
-    <span class="k">def</span> <span class="nf">addNodeInStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">addNodeInStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inserimento di un nuovo nodo all&#39;interno della struttura del coordinatore</span>
 <span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            node: il nodo da inserire all&#39;interno della struttura</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numNodes</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">ID</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>   
+            <span class="k">raise</span> <span class="n">duplicateNode</span>
 
     
     <span class="k">def</span> <span class="nf">generateBootstrapNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1159,7 +1167,8 @@ table {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="nb">id</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-            <span class="k">return</span> <span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">node</span>
+        
 
     
     <span class="k">def</span> <span class="nf">generateNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">):</span>
@@ -1174,10 +1183,8 @@ table {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO</span>
         <span class="c1"># if(Ho finito i possibili identificatori)</span>
-
-        <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">)</span>
-        <span class="k">while</span><span class="p">(</span><span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">):</span>
-            <span class="nb">id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+        
+        <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
         
@@ -1195,15 +1202,118 @@ table {
 <span class="sd">        Arguments:</span>
 <span class="sd">            JoiningNode: nodo che deve entrare nella rete</span>
 <span class="sd">            boostrapNode: nodo bootstrap</span>
-<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLookup</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span><span class="n">position</span><span class="p">)</span>
-        
-        
-    <span class="k">def</span> <span class="nf">nodeLookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
-        <span class="k">print</span> <span class="s2">&quot;print num contacts&quot;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">])</span><span class="o">.</span><span class="n">numContacts</span>
 
+        <span class="c1">#---- Prima parte: contatto il bootstrap</span>
+        
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
+        <span class="n">routingTable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Viene fatta una lookup per un id random verso il bootstrap node per ogni</span>
+        <span class="c1"># bucket della routing table del joining node</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">):</span>
+            <span class="n">randomID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateBucketID</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">randomID</span><span class="p">)</span>
+
+        <span class="c1">#Eliminiamo eventuali duplicati</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="c1"># Nei risultati della lookup non va considerato il joiningNode</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c1"># Inseriamo i nodi che arrivano dalla prima lookup all&#39;interno della </span>
+        <span class="c1"># routing table del joiningNode    </span>
+        <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInRoutingTable</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+
+        <span class="c1">#----Seconda Parte: contatto i nodi che mi ha mandato il bootstrap</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">):</span>
+            <span class="c1"># Consideriamo i bucket della routing table che non sono vuoti e che non </span>
+            <span class="c1"># hanno già il numero massimo di nodi all&#39;interno</span>
+            <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                <span class="c1"># prendo i nodi che stanno in quella routing table e genero un id random nel bucket i</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">())</span>
+                <span class="n">allNodes</span> <span class="o">=</span> <span class="n">nodes</span>
+                <span class="n">randomID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateBucketID</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+                
+                <span class="c1"># Fino a che ho dei nodi da visitare nel bucket i prendo il primo nodo della coda</span>
+                <span class="c1"># poi gli mando un findNode e poi faccio una lookup verso quel nodo mandando un id</span>
+                <span class="c1"># random presente in quel bucket.</span>
+                <span class="k">while</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isFull</span><span class="p">()):</span>
+                    <span class="n">idNode</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="n">destNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">idNode</span><span class="p">]</span><span class="o">.</span><span class="n">node</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">destNode</span><span class="p">)</span>
+                    <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">destNode</span><span class="p">,</span> <span class="n">randomID</span><span class="p">)</span>
+                    
+
+                    <span class="n">resSet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+                        <span class="n">resSet</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    
+                    <span class="c1"># Quando ho i nodi restituiti dalla lookup li inserisco nella routing table</span>
+                    <span class="c1"># e se finiscono nel bucket i devo inserirli anche nalla coda nodes</span>
+                    <span class="c1"># in modo che posso contattarli di nuovo</span>
+                    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">resSet</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInRoutingTable</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+                        <span class="k">if</span><span class="p">(</span><span class="n">position</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">and</span> <span class="nb">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allNodes</span><span class="p">):</span>
+                            <span class="n">nodes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+                    <span class="n">allNodes</span> <span class="o">=</span> <span class="n">allNodes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>
+                
+
+    <span class="k">def</span> <span class="nf">addNodeInRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dobbiamo calcolare la posizione di id rispetto al joiningNode poi inseriamo all&#39;interno della struttura</span>
+<span class="sd">        di joiningNode il nodo che ha id come identificatore.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            id: id del nodo che deve essere inserito all&#39;interno della routing Table di joiningNode</span>
+<span class="sd">            joiningNode: nodo che entra nella rete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">joiningStructure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">node</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">joiningStructure</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="p">(</span><span class="n">joiningStructure</span><span class="p">)</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">randomID</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viene calcolata la distanza tra il randomID e il nodo a cui viene inviata la lookup.</span>
+<span class="sd">        Poi si prende il bucket dove si troverebbe il randomID e prendiamo i nodi che stanno in quel</span>
+<span class="sd">        bucket, se poi non sono abbastanza allora ci spostiamo anche nei bucket vicini e prendiamo nodi fino</span>
+<span class="sd">        a che non arriviamo al numero massimo che può essere restituito.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            node: nodo destinatario della lookup</span>
+<span class="sd">            randomID: ID random preso in un bucket della routing table del joining Node</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Array con i nodi che sono vicini a RandomID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bucketPosition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">randomID</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="n">routingTable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">bucketPosition</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">bucketPosition</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">array</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">bucketPosition</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">bucketPosition</span><span class="o">+</span><span class="mi">1</span>
+            <span class="k">while</span><span class="p">((</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                        <span class="n">array</span> <span class="o">+=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+                    <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">j</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                        <span class="n">array</span> <span class="o">+=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+                    <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">array</span>
+            
 
     <span class="k">def</span> <span class="nf">findNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1219,22 +1329,21 @@ table {
 <span class="sd">        Returns:</span>
 <span class="sd">            la posizione del joiningNode nella routing table di Bootstrap Node</span>
 <span class="sd">        &quot;&quot;&quot;</span> 
-
-        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s2">&quot;POSITION: &quot;</span><span class="p">,</span> <span class="n">position</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)</span>
-        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
-        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">)</span>
-        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)):</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">)):</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">position</span>
 
         
 
-    <span class="k">def</span> <span class="nf">computeDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">computeDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">simple</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calcolo della distanza tra due id </span>
 <span class="sd">        </span>
@@ -1247,21 +1356,22 @@ table {
 <span class="sd">            id è 00010110 allora viene restituito 4 (posizione del primo 1s) che sarà</span>
 <span class="sd">            la posizione dell&#39;id all&#39;interno della routing table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">simple</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">id1</span><span class="p">)):</span>
+                <span class="k">if</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">id1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span> <span class="o">^</span> <span class="nb">int</span><span class="p">(</span><span class="n">id2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">break</span>
 
-        <span class="n">dist</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="o">^</span> <span class="nb">int</span><span class="p">(</span><span class="n">id2</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-        <span class="c1">#frmDist = format((dist), &#39;08b&#39;)</span>
-        <span class="k">return</span> <span class="n">dist</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">id1</span><span class="p">)</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span>
+           
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
 
-
-
-    <span class="nd">@staticmethod</span>
+    
     <span class="k">def</span> <span class="nf">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generazione dell&#39;id di un nuovo nodo che entra nella rete.</span>
-<span class="sd">        Per il calcolo dell&#39;id viene prima generato un ip random e poi</span>
-<span class="sd">        viene calcolato l&#39;hash dell&#39;id.</span>
-<span class="sd">        La libreria non permette di generare hash con lunghezza minore di 8</span>
-<span class="sd">        bit.</span>
+<span class="sd">        Viene generata una sequenza di bit di lunghezza len e si controlla che </span>
+<span class="sd">        l&#39;id generato non sia stato già precedentemente assegnato</span>
 <span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            len: lunghezza dell&#39;id del nodo</span>
@@ -1269,34 +1379,66 @@ table {
 <span class="sd">        Returns:</span>
 <span class="sd">            id del nodo</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nb">hash</span> <span class="o">=</span> <span class="n">SHAKE256</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-        <span class="nb">hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateIP</span><span class="p">())</span>
-        <span class="n">lenHash</span> <span class="o">=</span> <span class="nb">len</span><span class="o">/</span><span class="mi">8</span> <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="o">/</span><span class="mi">8</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">hexlify</span><span class="p">(</span><span class="nb">hash</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">lenHash</span><span class="p">))</span>
-        
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">generateIP</span><span class="p">():</span>
+        <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+        <span class="k">while</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">bitID</span><span class="p">)):</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="n">bitID</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">bitID</span>
+    
+    <span class="k">def</span> <span class="nf">generateBucketID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generazione random di un ip</span>
+<span class="sd">        Generazione dell&#39;id di un nodo che appartiene al bucket i </span>
+<span class="sd">        della routing table.</span>
+<span class="sd">        Viene generato un id che ha almeno un 1 in posizione i,</span>
+<span class="sd">        i successivi bit sono scelti random.</span>
+<span class="sd">        Nel caso di i=0 si considera solamente il primo bit della sequenza</span>
+<span class="sd">        che quindi sarà 0 o 1, poi il resto saranno tutti 0.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            i: posizione del bucket all&#39;interno della routing table</span>
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
-<span class="sd">            ip: ip che viene generato</span>
+<span class="sd">            id generato random e appartenente al bucket is</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> 
-                        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))))</span>
-        <span class="k">return</span> <span class="n">ip</span>
-
+        <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span> <span class="o">+</span> <span class="n">bitID</span>
+        
+        <span class="n">randomID</span> <span class="o">=</span> <span class="n">bitID</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">randomID</span>
+      
+    <span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+    
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                    
+                <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">contacts</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
     
     <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Funzione di debug usata per la stampa delle routing table</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">print</span> <span class="s2">&quot;Length of the structure: &quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">print</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">print</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="k">print</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">id</span> 
+            <span class="k">print</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">key</span> 
             <span class="k">print</span> <span class="n">value</span><span class="o">.</span><span class="n">printRoutingTable</span><span class="p">()</span>
 </pre></div>
 
@@ -1335,7 +1477,7 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Init della classe Coordinator.</span>
 
@@ -1349,27 +1491,35 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        Arguments:</span>
 <span class="sd">            numNodes: numero di nodi che faranno parte della rete</span>
 <span class="sd">            idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
-<span class="sd">        </span>
+<span class="sd">            maxBucketList: lunghezza massima dei bucketList</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numNodes</span> <span class="o">=</span> <span class="n">numNodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="o">=</span> <span class="n">idLen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span> <span class="o">=</span> <span class="n">maxBucketList</span>
 
         <span class="c1"># Generazione del primo nodo che entra nella rete</span>
-        <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">firstNode</span><span class="p">)</span>
+        <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="n">idLen</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">firstNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">firstNode</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">duplicateNode</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s2">&quot;Impossibile inserire il nodo nella rete. ID già presente&quot;</span>
         
     
-    <span class="k">def</span> <span class="nf">addNodeInStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">addNodeInStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inserimento di un nuovo nodo all&#39;interno della struttura del coordinatore</span>
 <span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            node: il nodo da inserire all&#39;interno della struttura</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numNodes</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">ID</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>   
+            <span class="k">raise</span> <span class="n">duplicateNode</span>
 
     
     <span class="k">def</span> <span class="nf">generateBootstrapNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1382,7 +1532,8 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="nb">id</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-            <span class="k">return</span> <span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">node</span>
+        
 
     
     <span class="k">def</span> <span class="nf">generateNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">):</span>
@@ -1397,10 +1548,8 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO</span>
         <span class="c1"># if(Ho finito i possibili identificatori)</span>
-
-        <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">)</span>
-        <span class="k">while</span><span class="p">(</span><span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">):</span>
-            <span class="nb">id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+        
+        <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
         
@@ -1418,15 +1567,118 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        Arguments:</span>
 <span class="sd">            JoiningNode: nodo che deve entrare nella rete</span>
 <span class="sd">            boostrapNode: nodo bootstrap</span>
-<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLookup</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span><span class="n">position</span><span class="p">)</span>
-        
-        
-    <span class="k">def</span> <span class="nf">nodeLookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
-        <span class="k">print</span> <span class="s2">&quot;print num contacts&quot;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">])</span><span class="o">.</span><span class="n">numContacts</span>
 
+        <span class="c1">#---- Prima parte: contatto il bootstrap</span>
+        
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
+        <span class="n">routingTable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Viene fatta una lookup per un id random verso il bootstrap node per ogni</span>
+        <span class="c1"># bucket della routing table del joining node</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">):</span>
+            <span class="n">randomID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateBucketID</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">randomID</span><span class="p">)</span>
+
+        <span class="c1">#Eliminiamo eventuali duplicati</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="c1"># Nei risultati della lookup non va considerato il joiningNode</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c1"># Inseriamo i nodi che arrivano dalla prima lookup all&#39;interno della </span>
+        <span class="c1"># routing table del joiningNode    </span>
+        <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInRoutingTable</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+
+        <span class="c1">#----Seconda Parte: contatto i nodi che mi ha mandato il bootstrap</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">):</span>
+            <span class="c1"># Consideriamo i bucket della routing table che non sono vuoti e che non </span>
+            <span class="c1"># hanno già il numero massimo di nodi all&#39;interno</span>
+            <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                <span class="c1"># prendo i nodi che stanno in quella routing table e genero un id random nel bucket i</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">())</span>
+                <span class="n">allNodes</span> <span class="o">=</span> <span class="n">nodes</span>
+                <span class="n">randomID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateBucketID</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+                
+                <span class="c1"># Fino a che ho dei nodi da visitare nel bucket i prendo il primo nodo della coda</span>
+                <span class="c1"># poi gli mando un findNode e poi faccio una lookup verso quel nodo mandando un id</span>
+                <span class="c1"># random presente in quel bucket.</span>
+                <span class="k">while</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isFull</span><span class="p">()):</span>
+                    <span class="n">idNode</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="n">destNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">idNode</span><span class="p">]</span><span class="o">.</span><span class="n">node</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">destNode</span><span class="p">)</span>
+                    <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">destNode</span><span class="p">,</span> <span class="n">randomID</span><span class="p">)</span>
+                    
+
+                    <span class="n">resSet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+                        <span class="n">resSet</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    
+                    <span class="c1"># Quando ho i nodi restituiti dalla lookup li inserisco nella routing table</span>
+                    <span class="c1"># e se finiscono nel bucket i devo inserirli anche nalla coda nodes</span>
+                    <span class="c1"># in modo che posso contattarli di nuovo</span>
+                    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">resSet</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInRoutingTable</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+                        <span class="k">if</span><span class="p">(</span><span class="n">position</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">and</span> <span class="nb">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allNodes</span><span class="p">):</span>
+                            <span class="n">nodes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+                    <span class="n">allNodes</span> <span class="o">=</span> <span class="n">allNodes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>
+                
+
+    <span class="k">def</span> <span class="nf">addNodeInRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dobbiamo calcolare la posizione di id rispetto al joiningNode poi inseriamo all&#39;interno della struttura</span>
+<span class="sd">        di joiningNode il nodo che ha id come identificatore.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            id: id del nodo che deve essere inserito all&#39;interno della routing Table di joiningNode</span>
+<span class="sd">            joiningNode: nodo che entra nella rete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">joiningStructure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">node</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">joiningStructure</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="p">(</span><span class="n">joiningStructure</span><span class="p">)</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">randomID</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viene calcolata la distanza tra il randomID e il nodo a cui viene inviata la lookup.</span>
+<span class="sd">        Poi si prende il bucket dove si troverebbe il randomID e prendiamo i nodi che stanno in quel</span>
+<span class="sd">        bucket, se poi non sono abbastanza allora ci spostiamo anche nei bucket vicini e prendiamo nodi fino</span>
+<span class="sd">        a che non arriviamo al numero massimo che può essere restituito.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            node: nodo destinatario della lookup</span>
+<span class="sd">            randomID: ID random preso in un bucket della routing table del joining Node</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Array con i nodi che sono vicini a RandomID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bucketPosition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">randomID</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="n">routingTable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">bucketPosition</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">bucketPosition</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">array</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">bucketPosition</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">bucketPosition</span><span class="o">+</span><span class="mi">1</span>
+            <span class="k">while</span><span class="p">((</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                        <span class="n">array</span> <span class="o">+=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+                    <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">j</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                        <span class="n">array</span> <span class="o">+=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+                    <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">array</span>
+            
 
     <span class="k">def</span> <span class="nf">findNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1442,22 +1694,21 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        Returns:</span>
 <span class="sd">            la posizione del joiningNode nella routing table di Bootstrap Node</span>
 <span class="sd">        &quot;&quot;&quot;</span> 
-
-        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s2">&quot;POSITION: &quot;</span><span class="p">,</span> <span class="n">position</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)</span>
-        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
-        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">)</span>
-        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)):</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">)):</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">position</span>
 
         
 
-    <span class="k">def</span> <span class="nf">computeDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">computeDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">simple</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calcolo della distanza tra due id </span>
 <span class="sd">        </span>
@@ -1470,21 +1721,22 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">            id è 00010110 allora viene restituito 4 (posizione del primo 1s) che sarà</span>
 <span class="sd">            la posizione dell&#39;id all&#39;interno della routing table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">simple</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">id1</span><span class="p">)):</span>
+                <span class="k">if</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">id1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span> <span class="o">^</span> <span class="nb">int</span><span class="p">(</span><span class="n">id2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">break</span>
 
-        <span class="n">dist</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="o">^</span> <span class="nb">int</span><span class="p">(</span><span class="n">id2</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-        <span class="c1">#frmDist = format((dist), &#39;08b&#39;)</span>
-        <span class="k">return</span> <span class="n">dist</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">id1</span><span class="p">)</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span>
+           
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
 
-
-
-    <span class="nd">@staticmethod</span>
+    
     <span class="k">def</span> <span class="nf">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generazione dell&#39;id di un nuovo nodo che entra nella rete.</span>
-<span class="sd">        Per il calcolo dell&#39;id viene prima generato un ip random e poi</span>
-<span class="sd">        viene calcolato l&#39;hash dell&#39;id.</span>
-<span class="sd">        La libreria non permette di generare hash con lunghezza minore di 8</span>
-<span class="sd">        bit.</span>
+<span class="sd">        Viene generata una sequenza di bit di lunghezza len e si controlla che </span>
+<span class="sd">        l&#39;id generato non sia stato già precedentemente assegnato</span>
 <span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            len: lunghezza dell&#39;id del nodo</span>
@@ -1492,34 +1744,66 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        Returns:</span>
 <span class="sd">            id del nodo</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nb">hash</span> <span class="o">=</span> <span class="n">SHAKE256</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-        <span class="nb">hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateIP</span><span class="p">())</span>
-        <span class="n">lenHash</span> <span class="o">=</span> <span class="nb">len</span><span class="o">/</span><span class="mi">8</span> <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="o">/</span><span class="mi">8</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">hexlify</span><span class="p">(</span><span class="nb">hash</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">lenHash</span><span class="p">))</span>
-        
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">generateIP</span><span class="p">():</span>
+        <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+        <span class="k">while</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">bitID</span><span class="p">)):</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="n">bitID</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">bitID</span>
+    
+    <span class="k">def</span> <span class="nf">generateBucketID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generazione random di un ip</span>
+<span class="sd">        Generazione dell&#39;id di un nodo che appartiene al bucket i </span>
+<span class="sd">        della routing table.</span>
+<span class="sd">        Viene generato un id che ha almeno un 1 in posizione i,</span>
+<span class="sd">        i successivi bit sono scelti random.</span>
+<span class="sd">        Nel caso di i=0 si considera solamente il primo bit della sequenza</span>
+<span class="sd">        che quindi sarà 0 o 1, poi il resto saranno tutti 0.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            i: posizione del bucket all&#39;interno della routing table</span>
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
-<span class="sd">            ip: ip che viene generato</span>
+<span class="sd">            id generato random e appartenente al bucket is</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> 
-                        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))))</span>
-        <span class="k">return</span> <span class="n">ip</span>
-
+        <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="n">bitID</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span> <span class="o">+</span> <span class="n">bitID</span>
+        
+        <span class="n">randomID</span> <span class="o">=</span> <span class="n">bitID</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">randomID</span>
+      
+    <span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+    
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                    
+                <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">contacts</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
     
     <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Funzione di debug usata per la stampa delle routing table</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">print</span> <span class="s2">&quot;Length of the structure: &quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">print</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">print</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="k">print</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">id</span> 
+            <span class="k">print</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">key</span> 
             <span class="k">print</span> <span class="n">value</span><span class="o">.</span><span class="n">printRoutingTable</span><span class="p">()</span>
 </pre></div>
 
@@ -1532,88 +1816,37 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
           <ul class="class_list">
           <li><a href="#src.Coordinator.coordinator">coordinator</a></li>
           </ul>
-          <h3>Static methods</h3>
-            
-  <div class="item">
-    <div class="name def" id="src.Coordinator.coordinator.generateIP">
-    <p>def <span class="ident">generateIP</span>(</p><p>)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Generazione random di un ip</p>
-<p>Returns:
-    ip: ip che viene generato</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.generateIP', this);">Show source &equiv;</a></p>
-  <div id="source-src.Coordinator.coordinator.generateIP" class="source">
-    <div class="codehilite"><pre><span></span><span class="nd">@staticmethod</span>
-<span class="k">def</span> <span class="nf">generateIP</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generazione random di un ip</span>
-<span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">        ip: ip che viene generato</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> 
-                    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))))</span>
-    <span class="k">return</span> <span class="n">ip</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="src.Coordinator.coordinator.generateId">
-    <p>def <span class="ident">generateId</span>(</p><p>self, len)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Generazione dell'id di un nuovo nodo che entra nella rete.
-Per il calcolo dell'id viene prima generato un ip random e poi
-viene calcolato l'hash dell'id.
-La libreria non permette di generare hash con lunghezza minore di 8
-bit.</p>
-<p>Arguments:
-    len: lunghezza dell'id del nodo</p>
-<p>Returns:
-    id del nodo</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.generateId', this);">Show source &equiv;</a></p>
-  <div id="source-src.Coordinator.coordinator.generateId" class="source">
-    <div class="codehilite"><pre><span></span><span class="nd">@staticmethod</span>
-<span class="k">def</span> <span class="nf">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generazione dell&#39;id di un nuovo nodo che entra nella rete.</span>
-<span class="sd">    Per il calcolo dell&#39;id viene prima generato un ip random e poi</span>
-<span class="sd">    viene calcolato l&#39;hash dell&#39;id.</span>
-<span class="sd">    La libreria non permette di generare hash con lunghezza minore di 8</span>
-<span class="sd">    bit.</span>
-<span class="sd">    </span>
-<span class="sd">    Arguments:</span>
-<span class="sd">        len: lunghezza dell&#39;id del nodo</span>
-<span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">        id del nodo</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">hash</span> <span class="o">=</span> <span class="n">SHAKE256</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-    <span class="nb">hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateIP</span><span class="p">())</span>
-    <span class="n">lenHash</span> <span class="o">=</span> <span class="nb">len</span><span class="o">/</span><span class="mi">8</span> <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="o">/</span><span class="mi">8</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">hexlify</span><span class="p">(</span><span class="nb">hash</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">lenHash</span><span class="p">))</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
           <h3>Instance variables</h3>
+            <div class="item">
+            <p id="src.Coordinator.coordinator.id" class="name">var <span class="ident">id</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="src.Coordinator.coordinator.idLen" class="name">var <span class="ident">idLen</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="src.Coordinator.coordinator.maxBucketList" class="name">var <span class="ident">maxBucketList</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
             <div class="item">
             <p id="src.Coordinator.coordinator.numNodes" class="name">var <span class="ident">numNodes</span></p>
             
@@ -1648,7 +1881,7 @@ bit.</p>
             
   <div class="item">
     <div class="name def" id="src.Coordinator.coordinator.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, numNodes, idLen)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, numNodes, idLen, maxBucketList)</p>
     </div>
     
 
@@ -1662,11 +1895,12 @@ key lo assegnamo quando aggiungiamo il nodo nella rete, value è la routing tabl
 In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
 <p>Arguments:
     numNodes: numero di nodi che faranno parte della rete
-    idLen: lunghezza dell'id di ognuno dei nodi</p></div>
+    idLen: lunghezza dell'id di ognuno dei nodi
+    maxBucketList: lunghezza massima dei bucketList</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.__init__', this);">Show source &equiv;</a></p>
   <div id="source-src.Coordinator.coordinator.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Init della classe Coordinator.</span>
 <span class="sd">    Quando viene creato il coordinato crea un primo nodo che prende un ID generato random</span>
@@ -1678,14 +1912,58 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
 <span class="sd">    Arguments:</span>
 <span class="sd">        numNodes: numero di nodi che faranno parte della rete</span>
 <span class="sd">        idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
-<span class="sd">    </span>
+<span class="sd">        maxBucketList: lunghezza massima dei bucketList</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">numNodes</span> <span class="o">=</span> <span class="n">numNodes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="o">=</span> <span class="n">idLen</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span> <span class="o">=</span> <span class="n">maxBucketList</span>
     <span class="c1"># Generazione del primo nodo che entra nella rete</span>
-    <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">firstNode</span><span class="p">)</span>
+    <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="n">idLen</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">firstNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">firstNode</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">duplicateNode</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s2">&quot;Impossibile inserire il nodo nella rete. ID già presente&quot;</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="src.Coordinator.coordinator.addNodeInRoutingTable">
+    <p>def <span class="ident">addNodeInRoutingTable</span>(</p><p>self, id, joiningNode)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Dobbiamo calcolare la posizione di id rispetto al joiningNode poi inseriamo all'interno della struttura
+di joiningNode il nodo che ha id come identificatore.</p>
+<p>Arguments:
+    id: id del nodo che deve essere inserito all'interno della routing Table di joiningNode
+    joiningNode: nodo che entra nella rete</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.addNodeInRoutingTable', this);">Show source &equiv;</a></p>
+  <div id="source-src.Coordinator.coordinator.addNodeInRoutingTable" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">addNodeInRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dobbiamo calcolare la posizione di id rispetto al joiningNode poi inseriamo all&#39;interno della struttura</span>
+<span class="sd">    di joiningNode il nodo che ha id come identificatore.</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        id: id del nodo che deve essere inserito all&#39;interno della routing Table di joiningNode</span>
+<span class="sd">        joiningNode: nodo che entra nella rete</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">joiningStructure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">node</span>
+    <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">joiningStructure</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+        <span class="p">(</span><span class="n">joiningStructure</span><span class="p">)</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
 </pre></div>
 
   </div>
@@ -1696,7 +1974,7 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
             
   <div class="item">
     <div class="name def" id="src.Coordinator.coordinator.addNodeInStructure">
-    <p>def <span class="ident">addNodeInStructure</span>(</p><p>self, node)</p>
+    <p>def <span class="ident">addNodeInStructure</span>(</p><p>self, ID, node)</p>
     </div>
     
 
@@ -1708,16 +1986,18 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.addNodeInStructure', this);">Show source &equiv;</a></p>
   <div id="source-src.Coordinator.coordinator.addNodeInStructure" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">addNodeInStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">addNodeInStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inserimento di un nuovo nodo all&#39;interno della struttura del coordinatore</span>
 <span class="sd">    </span>
 <span class="sd">    Arguments:</span>
 <span class="sd">        node: il nodo da inserire all&#39;interno della struttura</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numNodes</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">ID</span><span class="p">)):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>   
+        <span class="k">raise</span> <span class="n">duplicateNode</span>
 </pre></div>
 
   </div>
@@ -1728,7 +2008,7 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
             
   <div class="item">
     <div class="name def" id="src.Coordinator.coordinator.computeDistance">
-    <p>def <span class="ident">computeDistance</span>(</p><p>self, id1, id2)</p>
+    <p>def <span class="ident">computeDistance</span>(</p><p>self, id1, id2, simple)</p>
     </div>
     
 
@@ -1745,7 +2025,7 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.computeDistance', this);">Show source &equiv;</a></p>
   <div id="source-src.Coordinator.coordinator.computeDistance" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">computeDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">computeDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">simple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calcolo della distanza tra due id </span>
 <span class="sd">    </span>
@@ -1758,9 +2038,14 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
 <span class="sd">        id è 00010110 allora viene restituito 4 (posizione del primo 1s) che sarà</span>
 <span class="sd">        la posizione dell&#39;id all&#39;interno della routing table.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">dist</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="o">^</span> <span class="nb">int</span><span class="p">(</span><span class="n">id2</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-    <span class="c1">#frmDist = format((dist), &#39;08b&#39;)</span>
-    <span class="k">return</span> <span class="n">dist</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">simple</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">id1</span><span class="p">)):</span>
+            <span class="k">if</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">id1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span> <span class="o">^</span> <span class="nb">int</span><span class="p">(</span><span class="n">id2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">id1</span><span class="p">)</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span>
+       
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
 </pre></div>
 
   </div>
@@ -1785,9 +2070,11 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Funzione di debug usata per la stampa delle routing table</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">print</span> <span class="s2">&quot;Length of the structure: &quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">))</span>
+    <span class="k">print</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">print</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">print</span> <span class="s2">&quot;&quot;</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-        <span class="k">print</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">id</span> 
+        <span class="k">print</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">key</span> 
         <span class="k">print</span> <span class="n">value</span><span class="o">.</span><span class="n">printRoutingTable</span><span class="p">()</span>
 </pre></div>
 
@@ -1831,15 +2118,14 @@ Poi vengono cercati i K nodi che sono più vicini al joiningNode.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        la posizione del joiningNode nella routing table di Bootstrap Node</span>
 <span class="sd">    &quot;&quot;&quot;</span> 
-    <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-    <span class="k">print</span> <span class="s2">&quot;POSITION: &quot;</span><span class="p">,</span> <span class="n">position</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)</span>
-    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
-    <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">)</span>
-    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+    <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">)):</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
+    <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInStructure</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">)):</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">incrementNumContacts</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">position</span>
 </pre></div>
 
@@ -1873,7 +2159,103 @@ già presente all'interno della rete</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
         <span class="nb">id</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="nb">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">node</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="src.Coordinator.coordinator.generateBucketID">
+    <p>def <span class="ident">generateBucketID</span>(</p><p>self, i)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Generazione dell'id di un nodo che appartiene al bucket i 
+della routing table.
+Viene generato un id che ha almeno un 1 in posizione i,
+i successivi bit sono scelti random.
+Nel caso di i=0 si considera solamente il primo bit della sequenza
+che quindi sarà 0 o 1, poi il resto saranno tutti 0.</p>
+<p>Arguments:
+    i: posizione del bucket all'interno della routing table</p>
+<p>Returns:
+    id generato random e appartenente al bucket is</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.generateBucketID', this);">Show source &equiv;</a></p>
+  <div id="source-src.Coordinator.coordinator.generateBucketID" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">generateBucketID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generazione dell&#39;id di un nodo che appartiene al bucket i </span>
+<span class="sd">    della routing table.</span>
+<span class="sd">    Viene generato un id che ha almeno un 1 in posizione i,</span>
+<span class="sd">    i successivi bit sono scelti random.</span>
+<span class="sd">    Nel caso di i=0 si considera solamente il primo bit della sequenza</span>
+<span class="sd">    che quindi sarà 0 o 1, poi il resto saranno tutti 0.</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        i: posizione del bucket all&#39;interno della routing table</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        id generato random e appartenente al bucket is</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="n">bitID</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span> <span class="o">+</span> <span class="n">bitID</span>
+    
+    <span class="n">randomID</span> <span class="o">=</span> <span class="n">bitID</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">randomID</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="src.Coordinator.coordinator.generateId">
+    <p>def <span class="ident">generateId</span>(</p><p>self, len)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Generazione dell'id di un nuovo nodo che entra nella rete.
+Viene generata una sequenza di bit di lunghezza len e si controlla che 
+l'id generato non sia stato già precedentemente assegnato</p>
+<p>Arguments:
+    len: lunghezza dell'id del nodo</p>
+<p>Returns:
+    id del nodo</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.generateId', this);">Show source &equiv;</a></p>
+  <div id="source-src.Coordinator.coordinator.generateId" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generazione dell&#39;id di un nuovo nodo che entra nella rete.</span>
+<span class="sd">    Viene generata una sequenza di bit di lunghezza len e si controlla che </span>
+<span class="sd">    l&#39;id generato non sia stato già precedentemente assegnato</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        len: lunghezza dell&#39;id del nodo</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        id del nodo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+    <span class="k">while</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">bitID</span><span class="p">)):</span>
+        <span class="n">bitID</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="n">bitID</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">bitID</span>
 </pre></div>
 
   </div>
@@ -1909,11 +2291,47 @@ già presente all'interno della rete</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># TODO</span>
     <span class="c1"># if(Ho finito i possibili identificatori)</span>
-    <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">)</span>
-    <span class="k">while</span><span class="p">(</span><span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">):</span>
-        <span class="nb">id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">))</span>
+    
+    <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="src.Coordinator.coordinator.getAllData">
+    <p>def <span class="ident">getAllData</span>(</p><p>self, graph)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.getAllData', this);">Show source &equiv;</a></p>
+  <div id="source-src.Coordinator.coordinator.getAllData" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                
+            <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">contacts</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span>
 </pre></div>
 
   </div>
@@ -1953,10 +2371,59 @@ le chiamate a findNode()</p>
 <span class="sd">    Arguments:</span>
 <span class="sd">        JoiningNode: nodo che deve entrare nella rete</span>
 <span class="sd">        boostrapNode: nodo bootstrap</span>
-<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#---- Prima parte: contatto il bootstrap</span>
+    
     <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">nodeLookup</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span><span class="n">position</span><span class="p">)</span>
+    <span class="n">routingTable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Viene fatta una lookup per un id random verso il bootstrap node per ogni</span>
+    <span class="c1"># bucket della routing table del joining node</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">):</span>
+        <span class="n">randomID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateBucketID</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">randomID</span><span class="p">)</span>
+    <span class="c1">#Eliminiamo eventuali duplicati</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="c1"># Nei risultati della lookup non va considerato il joiningNode</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="c1"># Inseriamo i nodi che arrivano dalla prima lookup all&#39;interno della </span>
+    <span class="c1"># routing table del joiningNode    </span>
+    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInRoutingTable</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+    <span class="c1">#----Seconda Parte: contatto i nodi che mi ha mandato il bootstrap</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">):</span>
+        <span class="c1"># Consideriamo i bucket della routing table che non sono vuoti e che non </span>
+        <span class="c1"># hanno già il numero massimo di nodi all&#39;interno</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+            <span class="c1"># prendo i nodi che stanno in quella routing table e genero un id random nel bucket i</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">())</span>
+            <span class="n">allNodes</span> <span class="o">=</span> <span class="n">nodes</span>
+            <span class="n">randomID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateBucketID</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="c1"># Fino a che ho dei nodi da visitare nel bucket i prendo il primo nodo della coda</span>
+            <span class="c1"># poi gli mando un findNode e poi faccio una lookup verso quel nodo mandando un id</span>
+            <span class="c1"># random presente in quel bucket.</span>
+            <span class="k">while</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isFull</span><span class="p">()):</span>
+                <span class="n">idNode</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">destNode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">idNode</span><span class="p">]</span><span class="o">.</span><span class="n">node</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">findNode</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">destNode</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">destNode</span><span class="p">,</span> <span class="n">randomID</span><span class="p">)</span>
+                
+                <span class="n">resSet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span>
+                    <span class="n">resSet</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joiningNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                
+                <span class="c1"># Quando ho i nodi restituiti dalla lookup li inserisco nella routing table</span>
+                <span class="c1"># e se finiscono nel bucket i devo inserirli anche nalla coda nodes</span>
+                <span class="c1"># in modo che posso contattarli di nuovo</span>
+                <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">resSet</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">addNodeInRoutingTable</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">)</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">position</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">and</span> <span class="nb">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allNodes</span><span class="p">):</span>
+                        <span class="n">nodes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+                <span class="n">allNodes</span> <span class="o">=</span> <span class="n">allNodes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>
 </pre></div>
 
   </div>
@@ -1966,18 +2433,59 @@ le chiamate a findNode()</p>
   
             
   <div class="item">
-    <div class="name def" id="src.Coordinator.coordinator.nodeLookup">
-    <p>def <span class="ident">nodeLookup</span>(</p><p>self, bootstrapNode, joiningNode, position)</p>
+    <div class="name def" id="src.Coordinator.coordinator.lookup">
+    <p>def <span class="ident">lookup</span>(</p><p>self, node, randomID)</p>
     </div>
     
 
     
   
+    <div class="desc"><p>Viene calcolata la distanza tra il randomID e il nodo a cui viene inviata la lookup.
+Poi si prende il bucket dove si troverebbe il randomID e prendiamo i nodi che stanno in quel
+bucket, se poi non sono abbastanza allora ci spostiamo anche nei bucket vicini e prendiamo nodi fino
+a che non arriviamo al numero massimo che può essere restituito.</p>
+<p>Arguments:
+    node: nodo destinatario della lookup
+    randomID: ID random preso in un bucket della routing table del joining Node</p>
+<p>Returns:
+    Array con i nodi che sono vicini a RandomID</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.nodeLookup', this);">Show source &equiv;</a></p>
-  <div id="source-src.Coordinator.coordinator.nodeLookup" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">nodeLookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">,</span> <span class="n">joiningNode</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
-    <span class="k">print</span> <span class="s2">&quot;print num contacts&quot;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">bootstrapNode</span><span class="p">])</span><span class="o">.</span><span class="n">numContacts</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.lookup', this);">Show source &equiv;</a></p>
+  <div id="source-src.Coordinator.coordinator.lookup" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">randomID</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Viene calcolata la distanza tra il randomID e il nodo a cui viene inviata la lookup.</span>
+<span class="sd">    Poi si prende il bucket dove si troverebbe il randomID e prendiamo i nodi che stanno in quel</span>
+<span class="sd">    bucket, se poi non sono abbastanza allora ci spostiamo anche nei bucket vicini e prendiamo nodi fino</span>
+<span class="sd">    a che non arriviamo al numero massimo che può essere restituito.</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        node: nodo destinatario della lookup</span>
+<span class="sd">        randomID: ID random preso in un bucket della routing table del joining Node</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Array con i nodi che sono vicini a RandomID</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucketPosition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">computeDistance</span><span class="p">(</span><span class="n">randomID</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">routingTable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">routingTable</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">bucketPosition</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">bucketPosition</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">bucketPosition</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">bucketPosition</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">while</span><span class="p">((</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                    <span class="n">array</span> <span class="o">+=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+                <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">j</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()):</span>
+                    <span class="n">array</span> <span class="o">+=</span> <span class="n">routingTable</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">array</span>
 </pre></div>
 
   </div>
