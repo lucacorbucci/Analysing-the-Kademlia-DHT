@@ -24,7 +24,6 @@ class RoutingTable():
             bucketListLen: indica la lunghezza di ogni kBucketList
             node: il nodo associato a questa routing table
         """
-
         self.routingTable = [kBucketList(bucketListLen) for y in range(idLen)]
         self.node = node
         self.numContacts = 0

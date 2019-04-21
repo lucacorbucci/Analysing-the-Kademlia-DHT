@@ -11,13 +11,16 @@ from Node import *
 import binascii
 
 if(len(sys.argv) < 3):
-    print "Usage: python Main.py nodeNumber bitsOfTheIdentifier"
+    print "Usage: python Main.py nodeNumber bitsOfTheIdentifier maxBucketList"
 else:
     numNodes = int(sys.argv[1])
     idLen = int(sys.argv[2])
+    maxBucketList = 20
+    if(len(sys.argv) > 3):
+        maxBucketList = int(sys.argv[3])
     
     # Creazione del coordinatore 
-    coordinator = coordinator(numNodes, idLen)
+    coordinator = coordinator(numNodes, idLen, maxBucketList)
     
 
     
@@ -28,8 +31,9 @@ else:
         joiningNode = coordinator.generateNode(idLen)      
         # Calcolo del nodo bootstrap
         bootstrapNode = coordinator.generateBootstrapNode()
-        print ""
-        print "bootstrap", bootstrapNode.id
+        #print ""
+        #print "joininig: ", joiningNode.id
+        #print "bootstrap", bootstrapNode.id
         # Inserimento del nuovo nodo nella rete
         coordinator.join(joiningNode, bootstrapNode)
         #print "bootstrap Node: ", bootstrapNode.id

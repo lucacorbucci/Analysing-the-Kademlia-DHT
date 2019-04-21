@@ -31,10 +31,8 @@ class kBucketList():
             node: Nodo da inserire nella k bucket list
         """
 
-        #TODO Aggiungere il controllo sulla dimensione della k
-        # bucket list e il ping del nodo per capire se il nodo è
-        # ancora vivo o no.
-        if(node not in self.array):
+
+        if(node not in self.array and self.length < self.maxLength):
             self.array.append(node)
             self.length+=1
             return True
@@ -52,7 +50,7 @@ class kBucketList():
         """
         Funzione di debug per la stampa della bucket list
         """
-
+        print len(self.array)
         for node in self.array:
             print "@@@@@@@@", node.id
 
