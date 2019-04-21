@@ -9,6 +9,8 @@ sys.setdefaultencoding('utf-8')
 from Coordinator import *
 from Node import *
 import binascii
+from Graph import *
+
 
 if(len(sys.argv) < 3):
     print "Usage: python Main.py nodeNumber bitsOfTheIdentifier maxBucketList"
@@ -42,4 +44,6 @@ else:
             #print "bootstrap Node: ", bootstrapNode.id
             #print "joining Node: ", joiningNode.id
         coordinator.debug()
-    
+        graph = Graph()
+        archs = coordinator.getAllData(graph)
+        

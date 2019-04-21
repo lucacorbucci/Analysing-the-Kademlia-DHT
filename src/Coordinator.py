@@ -324,6 +324,25 @@ class coordinator():
         
         return randomID
       
+    def getAllData(self, graph):
+        data = {}
+        id = ""
+        with open('graph.txt', 'w') as writer:
+    
+            for key, value in self.structure.iteritems():
+                if(graph.mapID.has_key(key)):
+                    id = graph.mapID[key]
+                else:
+                    id = graph.getCounter()
+                    graph.incrementCounter()
+                    graph.mapID[key] = id
+                    
+                contacts = value.getRoutingTable(graph)
+                data[id] = contacts
+                for c in contacts:
+                    writer.write(str(id) + " " + str(c) + "\n")
+        print graph.mapID
+        return data
     
     def debug(self):
         """

@@ -51,3 +51,10 @@ class RoutingTable():
                 kbucket.printKBucketList()
                 print "****"
 
+
+    def getRoutingTable(self, graph):
+        nodes = []
+        for kbucket in self.routingTable:
+
+            nodes += kbucket.getMappedNodes(graph)
+        return nodes

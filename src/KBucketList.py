@@ -46,6 +46,18 @@ class kBucketList():
         return tmp
 
 
+    def getMappedNodes(self, graph):
+        tmp = []
+        for nodes in self.array:
+            if(graph.mapID.has_key(nodes.id)):
+                tmp.append(graph.mapID[nodes.id])
+            else:
+                id = graph.getCounter()
+                graph.incrementCounter()
+                graph.mapID[nodes.id] = id
+                tmp.append(id)
+        return tmp
+
     def printKBucketList(self):
         """
         Funzione di debug per la stampa della bucket list
