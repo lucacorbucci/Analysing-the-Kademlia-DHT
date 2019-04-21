@@ -341,7 +341,6 @@ class coordinator():
                 data[id] = contacts
                 for c in contacts:
                     writer.write(str(id) + " " + str(c) + "\n")
-        print graph.mapID
         return data
     
     def debug(self):

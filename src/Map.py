@@ -13,7 +13,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-class Graph():
+class Map():
 
     def __init__(self):
         self.mapID = {}

@@ -9,7 +9,9 @@ sys.setdefaultencoding('utf-8')
 from Coordinator import *
 from Node import *
 import binascii
-from Graph import *
+from Map import *
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 if(len(sys.argv) < 3):
@@ -43,7 +45,19 @@ else:
             coordinator.join(joiningNode, bootstrapNode)
             #print "bootstrap Node: ", bootstrapNode.id
             #print "joining Node: ", joiningNode.id
-        coordinator.debug()
-        graph = Graph()
-        archs = coordinator.getAllData(graph)
-        
+        #coordinator.debug()
+        mapper = Map()
+        archs = coordinator.getAllData(mapper)
+
+        graph = nx.Graph()
+
+        with open('graph.txt', 'r') as file:
+            for line in file:
+                arrayLine = line.strip('\n').split(" ")
+                graph.add_edge(arrayLine[0], arrayLine[1])  
+        '''
+        plt.subplot(121)
+        options = {'node_color': 'black','node_size': 10,'width': 1}
+        nx.draw(graph, **options)
+        plt.show()
+        '''
