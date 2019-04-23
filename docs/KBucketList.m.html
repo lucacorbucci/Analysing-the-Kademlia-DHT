@@ -1094,10 +1094,13 @@ table {
 <span class="sd">    &quot;&quot;&quot;</span>
 
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span> <span class="o">=</span> <span class="n">k</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Mode è 1 se voglio mantenere sempre quelli che ho messo prima</span>
+        <span class="c1"># Vale 0 se invece voglio mettere nella KBucket List i più recenti quando è piena</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
 
     
     <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
@@ -1111,32 +1114,63 @@ table {
 <span class="sd">            node: Nodo da inserire nella k bucket list</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-
-        <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-            <span class="k">return</span> <span class="bp">True</span>
+        <span class="c1"># Caso in cui mantengo i più vecchi nella KBucket List</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">False</span>
+            <span class="c1"># Caso in cui metto i nuovi nella KBucketList</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
     
     <span class="k">def</span> <span class="nf">getNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Funzione che restituisce i nodi presenti all&#39;interno di una KBucket List</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [Array] -- Array con gli id dei nodi della K-Bucket List</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
             <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tmp</span>
 
 
-    <span class="k">def</span> <span class="nf">getMappedNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getMappedNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Vengono restituiti i nodi che sono all&#39;interno della KBucket List mappati </span>
+<span class="sd">        in un intero.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            mappa {Map} -- mappa id-intero</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Array -- Array con i nodi rimappati in interi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-            <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
-                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                <span class="n">mappa</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
                 <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tmp</span>
+
 
     <span class="k">def</span> <span class="nf">printKBucketList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1153,15 +1187,16 @@ table {
 <span class="sd">        Controlla se la coda è piena o no</span>
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
-<span class="sd">            Boolean: true se la lista è piena, false altrimenti</span>
+<span class="sd">            Boolean -- true se la lista è piena, false altrimenti</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
 
     <span class="k">def</span> <span class="nf">isEmpty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Controlla se la coda è vuota o no.</span>
+
 <span class="sd">        Returns:</span>
-<span class="sd">            Boolean: true se la lista è vuota, false altrimenti</span>
+<span class="sd">            Boolean -- True se la lista è vuota, False altrimenti</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
@@ -1205,10 +1240,13 @@ il primo elemento della lista alla fine.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span> <span class="o">=</span> <span class="n">k</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Mode è 1 se voglio mantenere sempre quelli che ho messo prima</span>
+        <span class="c1"># Vale 0 se invece voglio mettere nella KBucket List i più recenti quando è piena</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
 
     
     <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
@@ -1222,32 +1260,63 @@ il primo elemento della lista alla fine.</p>
 <span class="sd">            node: Nodo da inserire nella k bucket list</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-
-        <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-            <span class="k">return</span> <span class="bp">True</span>
+        <span class="c1"># Caso in cui mantengo i più vecchi nella KBucket List</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">False</span>
+            <span class="c1"># Caso in cui metto i nuovi nella KBucketList</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
     
     <span class="k">def</span> <span class="nf">getNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Funzione che restituisce i nodi presenti all&#39;interno di una KBucket List</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [Array] -- Array con gli id dei nodi della K-Bucket List</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
             <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tmp</span>
 
 
-    <span class="k">def</span> <span class="nf">getMappedNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getMappedNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Vengono restituiti i nodi che sono all&#39;interno della KBucket List mappati </span>
+<span class="sd">        in un intero.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            mappa {Map} -- mappa id-intero</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Array -- Array con i nodi rimappati in interi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-            <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
-                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                <span class="n">mappa</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
                 <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tmp</span>
+
 
     <span class="k">def</span> <span class="nf">printKBucketList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1264,15 +1333,16 @@ il primo elemento della lista alla fine.</p>
 <span class="sd">        Controlla se la coda è piena o no</span>
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
-<span class="sd">            Boolean: true se la lista è piena, false altrimenti</span>
+<span class="sd">            Boolean -- true se la lista è piena, false altrimenti</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
 
     <span class="k">def</span> <span class="nf">isEmpty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Controlla se la coda è vuota o no.</span>
+
 <span class="sd">        Returns:</span>
-<span class="sd">            Boolean: true se la lista è vuota, false altrimenti</span>
+<span class="sd">            Boolean -- True se la lista è vuota, False altrimenti</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
@@ -1318,11 +1388,21 @@ il primo elemento della lista alla fine.</p>
 </div>
 
             </div>
+            <div class="item">
+            <p id="src.KBucketList.kBucketList.mode" class="name">var <span class="ident">mode</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
           <h3>Methods</h3>
             
   <div class="item">
     <div class="name def" id="src.KBucketList.kBucketList.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, k)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, k, mode)</p>
     </div>
     
 
@@ -1331,10 +1411,13 @@ il primo elemento della lista alla fine.</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList.kBucketList.__init__', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList.kBucketList.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span> <span class="o">=</span> <span class="n">k</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Mode è 1 se voglio mantenere sempre quelli che ho messo prima</span>
+    <span class="c1"># Vale 0 se invece voglio mettere nella KBucket List i più recenti quando è piena</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
 </pre></div>
 
   </div>
@@ -1345,24 +1428,40 @@ il primo elemento della lista alla fine.</p>
             
   <div class="item">
     <div class="name def" id="src.KBucketList.kBucketList.getMappedNodes">
-    <p>def <span class="ident">getMappedNodes</span>(</p><p>self, graph)</p>
+    <p>def <span class="ident">getMappedNodes</span>(</p><p>self, mappa)</p>
     </div>
     
 
     
   
+    <div class="desc"><p>Vengono restituiti i nodi che sono all'interno della KBucket List mappati 
+in un intero.</p>
+<p>Arguments:
+    mappa {Map} -- mappa id-intero</p>
+<p>Returns:
+    Array -- Array con i nodi rimappati in interi</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList.kBucketList.getMappedNodes', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList.kBucketList.getMappedNodes" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getMappedNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getMappedNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vengono restituiti i nodi che sono all&#39;interno della KBucket List mappati </span>
+<span class="sd">    in un intero.</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        mappa {Map} -- mappa id-intero</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Array -- Array con i nodi rimappati in interi</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-        <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
-            <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+            <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+            <span class="n">mappa</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+            <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
             <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">tmp</span>
 </pre></div>
@@ -1381,10 +1480,19 @@ il primo elemento della lista alla fine.</p>
 
     
   
+    <div class="desc"><p>Funzione che restituisce i nodi presenti all'interno di una KBucket List</p>
+<p>Returns:
+    [Array] -- Array con gli id dei nodi della K-Bucket List</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList.kBucketList.getNodes', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList.kBucketList.getNodes" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Funzione che restituisce i nodi presenti all&#39;interno di una KBucket List</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        [Array] -- Array con gli id dei nodi della K-Bucket List</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
         <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -1424,12 +1532,26 @@ e metto in coda il nuovo nodo.</p>
 <span class="sd">    Arguments:</span>
 <span class="sd">        node: Nodo da inserire nella k bucket list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-        <span class="k">return</span> <span class="bp">True</span>
+    <span class="c1"># Caso in cui mantengo i più vecchi nella KBucket List</span>
+    <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">False</span>
+        <span class="c1"># Caso in cui metto i nuovi nella KBucketList</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
 </pre></div>
 
   </div>
@@ -1446,9 +1568,9 @@ e metto in coda il nuovo nodo.</p>
 
     
   
-    <div class="desc"><p>Controlla se la coda è vuota o no.
-Returns:
-    Boolean: true se la lista è vuota, false altrimenti</p></div>
+    <div class="desc"><p>Controlla se la coda è vuota o no.</p>
+<p>Returns:
+    Boolean -- True se la lista è vuota, False altrimenti</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList.kBucketList.isEmpty', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList.kBucketList.isEmpty" class="source">
@@ -1456,7 +1578,7 @@ Returns:
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Controlla se la coda è vuota o no.</span>
 <span class="sd">    Returns:</span>
-<span class="sd">        Boolean: true se la lista è vuota, false altrimenti</span>
+<span class="sd">        Boolean -- True se la lista è vuota, False altrimenti</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
@@ -1478,7 +1600,7 @@ Returns:
   
     <div class="desc"><p>Controlla se la coda è piena o no</p>
 <p>Returns:
-    Boolean: true se la lista è piena, false altrimenti</p></div>
+    Boolean -- true se la lista è piena, false altrimenti</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList.kBucketList.isFull', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList.kBucketList.isFull" class="source">
@@ -1487,7 +1609,7 @@ Returns:
 <span class="sd">    Controlla se la coda è piena o no</span>
 <span class="sd">    </span>
 <span class="sd">    Returns:</span>
-<span class="sd">        Boolean: true se la lista è piena, false altrimenti</span>
+<span class="sd">        Boolean -- true se la lista è piena, false altrimenti</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
 </pre></div>

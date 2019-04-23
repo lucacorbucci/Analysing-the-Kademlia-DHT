@@ -4,7 +4,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
     <title>src API documentation</title>
-    <meta name="description" content="Main Class" />
+    <meta name="description" content="Classe main in cui troviamo la creazione del coordinatore e le varie richieste che vengono
+inviate a..." />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
   
@@ -1043,22 +1044,31 @@ table {
     <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
       
   <ul>
-    <li class="mono"><a href="#src.archs">archs</a></li>
-    <li class="mono"><a href="#src.arrayLine">arrayLine</a></li>
-    <li class="mono"><a href="#src.file">file</a></li>
-    <li class="mono"><a href="#src.i">i</a></li>
     <li class="mono"><a href="#src.idLen">idLen</a></li>
-    <li class="mono"><a href="#src.line">line</a></li>
     <li class="mono"><a href="#src.maxBucketList">maxBucketList</a></li>
+    <li class="mono"><a href="#src.mode">mode</a></li>
     <li class="mono"><a href="#src.numNodes">numNodes</a></li>
+    <li class="mono"><a href="#src.numSlot">numSlot</a></li>
+    <li class="mono"><a href="#src.simple">simple</a></li>
+  </ul>
+
+    </li>
+
+    <li class="set"><h3><a href="#header-functions">Functions</a></h3>
+      
+  <ul>
+    <li class="mono"><a href="#src.checkInput">checkInput</a></li>
+    <li class="mono"><a href="#src.createGraph">createGraph</a></li>
+    <li class="mono"><a href="#src.simpleGraph">simpleGraph</a></li>
+    <li class="mono"><a href="#src.temporalGraph">temporalGraph</a></li>
   </ul>
 
     </li>
 
 
-
     <li class="set"><h3><a href="#header-submodules">Sub-modules</a></h3>
       <ul>
+        <li class="mono"><a href="Analysis.m.html">src.Analysis</a></li>
         <li class="mono"><a href="Coordinator.m.html">src.Coordinator</a></li>
         <li class="mono"><a href="Exceptions.m.html">src.Exceptions</a></li>
         <li class="mono"><a href="KBucketList.m.html">src.KBucketList</a></li>
@@ -1079,13 +1089,19 @@ table {
 
   <header id="section-intro">
   <h1 class="title"><span class="name">src</span> module</h1>
-  <p>Main Class</p>
+  <p>Classe main in cui troviamo la creazione del coordinatore e le varie richieste che vengono
+inviate al coordinatore per inserire i nodi nella rete. 
+A seconda del tipo di analisi che vogliamo effettuare verrà chiamata la funzione startAnalysis
+in modo differente.</p>
   
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src', this);">Show source &equiv;</a></p>
   <div id="source-src" class="source">
     <div class="codehilite"><pre><span></span><span class="c1"># coding=utf-8</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Main Class</span>
+<span class="sd">    Classe main in cui troviamo la creazione del coordinatore e le varie richieste che vengono</span>
+<span class="sd">    inviate al coordinatore per inserire i nodi nella rete. </span>
+<span class="sd">    A seconda del tipo di analisi che vogliamo effettuare verrà chiamata la funzione startAnalysis</span>
+<span class="sd">    in modo differente.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="nb">reload</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
@@ -1097,55 +1113,152 @@ table {
 <span class="kn">from</span> <span class="nn">Map</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">Analysis</span> <span class="kn">as</span> <span class="nn">Analysis</span>
 
 
-<span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
-    <span class="k">print</span> <span class="s2">&quot;Usage: python Main.py nodeNumber bitsOfTheIdentifier maxBucketList&quot;</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">numNodes</span> <span class="o">=</span> <span class="mi">8</span>
-    <span class="n">idLen</span> <span class="o">=</span> <span class="mi">8</span>
-    <span class="n">maxBucketList</span> <span class="o">=</span> <span class="mi">20</span>
-    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">):</span>
-        <span class="n">maxBucketList</span> <span class="o">=</span> <span class="mi">8</span>
-    
-    <span class="k">if</span><span class="p">(</span><span class="n">numNodes</span> <span class="o">&gt;</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">idLen</span><span class="p">)):</span>
-        <span class="k">print</span> <span class="s2">&quot;Lunghezza degli identificatori non sufficiente&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Creazione del coordinatore </span>
-        <span class="n">coordinator</span> <span class="o">=</span> <span class="n">coordinator</span><span class="p">(</span><span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">)</span>
-        
 
-        
-        <span class="c1"># Per n-1 volte deve essere eseguita la fase di costruzione della</span>
-        <span class="c1"># routing table.</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numNodes</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">simpleGraph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulazione più semplice, abbiamo un numero di nodi e li inseriamo tutti all&#39;interno</span>
+<span class="sd">        della rete creando poi il grafo e svolgendo le analisi sul grafo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Per n-1 volte deve essere eseguita la fase di costruzione della routing table.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numNodes</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Generazione del nodo che vuole entrare nella rete</span>
+        <span class="n">joiningNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateNode</span><span class="p">(</span><span class="n">idLen</span><span class="p">)</span>      
+        <span class="c1"># Calcolo del nodo bootstrap</span>
+        <span class="n">bootstrapNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateBootstrapNode</span><span class="p">()</span>
+        <span class="c1"># Inserimento del nuovo nodo nella rete</span>
+        <span class="n">coordinator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
+
+    <span class="n">createGraph</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">temporalGraph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulazione dell&#39;inserimento dei nodi all&#39;interno della rete. Vengono inseriti un numero di nodi </span>
+<span class="sd">    e poi si svolge l&#39;analisi sul grafo parziale. In questo modo è possibile studiare l&#39;evoluzione della</span>
+<span class="sd">    rete e del grafo a mano a mano che vengono inseriti i nuovi nodi</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nTime</span> <span class="o">=</span> <span class="n">numNodes</span> <span class="o">/</span> <span class="n">numSlot</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">numSlot</span><span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">nTime</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">nTime</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
             <span class="c1"># Generazione del nodo che vuole entrare nella rete</span>
             <span class="n">joiningNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateNode</span><span class="p">(</span><span class="n">idLen</span><span class="p">)</span>      
             <span class="c1"># Calcolo del nodo bootstrap</span>
             <span class="n">bootstrapNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateBootstrapNode</span><span class="p">()</span>
-            <span class="c1">#print &quot;&quot;</span>
-            <span class="c1">#print &quot;joininig: &quot;, joiningNode.id</span>
-            <span class="c1">#print &quot;bootstrap&quot;, bootstrapNode.id</span>
             <span class="c1"># Inserimento del nuovo nodo nella rete</span>
             <span class="n">coordinator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
-            <span class="c1">#print &quot;bootstrap Node: &quot;, bootstrapNode.id</span>
-            <span class="c1">#print &quot;joining Node: &quot;, joiningNode.id</span>
-        <span class="c1">#coordinator.debug()</span>
-        <span class="n">mapper</span> <span class="o">=</span> <span class="n">Map</span><span class="p">()</span>
-        <span class="n">archs</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">getAllData</span><span class="p">(</span><span class="n">mapper</span><span class="p">)</span>
 
-        <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">createGraph</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">file</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">file</span><span class="p">:</span>
-                <span class="n">arrayLine</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">arrayLine</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arrayLine</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        plt.subplot(121)</span>
-<span class="sd">        options = {&#39;node_color&#39;: &#39;black&#39;,&#39;node_size&#39;: 10,&#39;width&#39;: 1}</span>
-<span class="sd">        nx.draw(graph, **options)</span>
-<span class="sd">        plt.show()</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+
+<span class="k">def</span> <span class="nf">createGraph</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creazione del grafo utilizzando i dati riguardanti gli archi che sono stati memorizzati nel file</span>
+<span class="sd">    graph.txt. Se index è maggiore di 0 stiamo facendo un&#39;analisi temporale e quindi passiamo l&#39;indice </span>
+<span class="sd">    all&#39;analisi per poter nominare i file che verranno creati.</span>
+<span class="sd">    Se invece index&lt;0 allora stiamo facendo un&#39;analisi completa e non c&#39;è bisogno di passare index al</span>
+<span class="sd">    codice dell&#39;analisi</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        index {int} -- Indica quale slot temporale stiamo analizzando</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ogni id dei nodi presenti nel grafo viene mappato in un intero</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="n">Map</span><span class="p">()</span>
+    <span class="n">coordinator</span><span class="o">.</span><span class="n">getAllData</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+
+    <span class="c1">#Creazione del grafo prendendo gli archi dal file in cui li ho salvati</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./src/results/graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">file</span><span class="p">:</span>
+            <span class="n">arrayLine</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">arrayLine</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arrayLine</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        
+    <span class="k">if</span><span class="p">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">Analysis</span><span class="o">.</span><span class="n">startAnalysis</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Analysis</span><span class="o">.</span><span class="n">startAnalysis</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+
+
+<span class="k">def</span> <span class="nf">checkInput</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controlliamo che vengano dati tutti i parametri necessari per l&#39;esecuzione del codice e poi</span>
+<span class="sd">    controlliamo che i parametri in input non siano minori di 0</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Boolean -- True se non ci sono errori, false altrimenti</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">numNodes</span> 
+    <span class="k">global</span> <span class="n">idLen</span> 
+    <span class="k">global</span> <span class="n">maxBucketList</span>
+    <span class="k">global</span> <span class="n">simple</span>
+    <span class="k">global</span> <span class="n">numSlot</span> 
+    <span class="k">global</span> <span class="n">mode</span>
+
+
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;&#39;&#39;Usage: python Main.py nodeNumber bitsOfTheIdentifier maxBucketList KBucketListManagment typeOfAnalysis numSlot</span>
+<span class="s1">            nodeNumber: (Intero &gt; 0) Numero di nodi che vogliamo inserire nella rete</span>
+<span class="s1">            bitsOfTheIdentifier: (Intero &gt; 0) lunghezza di ogni identificatore dei nodi </span>
+<span class="s1">            maxBucketList: (Intero &gt; 0) lunghezza massima delle bucket List </span>
+<span class="s1">            KBucketListManagment: Gestione della KBucketList, scrivere 1 per mantenere i nodi più vecchi e 0 per inserire i nuovi</span>
+<span class="s1">            typeOfAnalysis: Tipo di analisi, scrivere 1 per l&#39;analisi semplice e 0 per la temporale</span>
+<span class="s1">            numSlot: (Intero &gt; 0) specificare in quanti slot dividere i dati da inserire nella rete (scegliere un numero divisibile per nodeNumber)&#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">numNodes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">idLen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">maxBucketList</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">simple</span><span class="o">=</span><span class="bp">True</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">simple</span><span class="o">=</span><span class="bp">False</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">simple</span><span class="o">==</span><span class="bp">False</span><span class="p">):</span>
+            <span class="n">numSlot</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">numSlot</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">print</span> <span class="s2">&quot;numSlot: input non valido&quot;</span>
+    
+        <span class="k">if</span><span class="p">(</span><span class="n">numNodes</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">idLen</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">maxBucketList</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">simple</span><span class="o">&lt;</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">simple</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">mode</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s2">&quot;Input non valido&quot;</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+<span class="c1">########################################################################################</span>
+<span class="c1"># MAIN:</span>
+<span class="c1"># Qua Avviamo il coordinatore, l&#39;inserimento dei nodi e l&#39;analisi del grafo che viene generato</span>
+<span class="c1">########################################################################################</span>
+
+<span class="n">numNodes</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">idLen</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">maxBucketList</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">simple</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">numSlot</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<span class="k">print</span> <span class="n">idLen</span>
+
+<span class="k">if</span><span class="p">(</span><span class="n">checkInput</span><span class="p">()):</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">numNodes</span> <span class="o">&gt;</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">idLen</span><span class="p">)):</span>
+        <span class="k">print</span> <span class="s2">&quot;Lunghezza degli identificatori non sufficiente&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Creazione del coordinatore </span>
+        <span class="n">coordinator</span> <span class="o">=</span> <span class="n">coordinator</span><span class="p">(</span><span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">simple</span><span class="p">):</span>
+            <span class="n">simpleGraph</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">temporalGraph</span><span class="p">()</span>
+            
 </pre></div>
 
   </div>
@@ -1155,47 +1268,7 @@ table {
   <section id="section-items">
     <h2 class="section-title" id="header-variables">Module variables</h2>
       <div class="item">
-      <p id="src.archs" class="name">var <span class="ident">archs</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="src.arrayLine" class="name">var <span class="ident">arrayLine</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="src.file" class="name">var <span class="ident">file</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="src.i" class="name">var <span class="ident">i</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
       <p id="src.idLen" class="name">var <span class="ident">idLen</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="src.line" class="name">var <span class="ident">line</span></p>
       
   
   <div class="source_cont">
@@ -1211,6 +1284,14 @@ table {
 
       </div>
       <div class="item">
+      <p id="src.mode" class="name">var <span class="ident">mode</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
+      <div class="item">
       <p id="src.numNodes" class="name">var <span class="ident">numNodes</span></p>
       
   
@@ -1218,10 +1299,234 @@ table {
 </div>
 
       </div>
+      <div class="item">
+      <p id="src.numSlot" class="name">var <span class="ident">numSlot</span></p>
+      
+  
+  <div class="source_cont">
+</div>
 
+      </div>
+      <div class="item">
+      <p id="src.simple" class="name">var <span class="ident">simple</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
+
+    <h2 class="section-title" id="header-functions">Functions</h2>
+      
+  <div class="item">
+    <div class="name def" id="src.checkInput">
+    <p>def <span class="ident">checkInput</span>(</p><p>)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Controlliamo che vengano dati tutti i parametri necessari per l'esecuzione del codice e poi
+controlliamo che i parametri in input non siano minori di 0</p>
+<p>Returns:
+    Boolean -- True se non ci sono errori, false altrimenti</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.checkInput', this);">Show source &equiv;</a></p>
+  <div id="source-src.checkInput" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">checkInput</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controlliamo che vengano dati tutti i parametri necessari per l&#39;esecuzione del codice e poi</span>
+<span class="sd">    controlliamo che i parametri in input non siano minori di 0</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Boolean -- True se non ci sono errori, false altrimenti</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">numNodes</span> 
+    <span class="k">global</span> <span class="n">idLen</span> 
+    <span class="k">global</span> <span class="n">maxBucketList</span>
+    <span class="k">global</span> <span class="n">simple</span>
+    <span class="k">global</span> <span class="n">numSlot</span> 
+    <span class="k">global</span> <span class="n">mode</span>
+
+
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;&#39;&#39;Usage: python Main.py nodeNumber bitsOfTheIdentifier maxBucketList KBucketListManagment typeOfAnalysis numSlot</span>
+<span class="s1">            nodeNumber: (Intero &gt; 0) Numero di nodi che vogliamo inserire nella rete</span>
+<span class="s1">            bitsOfTheIdentifier: (Intero &gt; 0) lunghezza di ogni identificatore dei nodi </span>
+<span class="s1">            maxBucketList: (Intero &gt; 0) lunghezza massima delle bucket List </span>
+<span class="s1">            KBucketListManagment: Gestione della KBucketList, scrivere 1 per mantenere i nodi più vecchi e 0 per inserire i nuovi</span>
+<span class="s1">            typeOfAnalysis: Tipo di analisi, scrivere 1 per l&#39;analisi semplice e 0 per la temporale</span>
+<span class="s1">            numSlot: (Intero &gt; 0) specificare in quanti slot dividere i dati da inserire nella rete (scegliere un numero divisibile per nodeNumber)&#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">numNodes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">idLen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">maxBucketList</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">simple</span><span class="o">=</span><span class="bp">True</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">simple</span><span class="o">=</span><span class="bp">False</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">simple</span><span class="o">==</span><span class="bp">False</span><span class="p">):</span>
+            <span class="n">numSlot</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">numSlot</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">print</span> <span class="s2">&quot;numSlot: input non valido&quot;</span>
+    
+        <span class="k">if</span><span class="p">(</span><span class="n">numNodes</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">idLen</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">maxBucketList</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">simple</span><span class="o">&lt;</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">simple</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">mode</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s2">&quot;Input non valido&quot;</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="src.createGraph">
+    <p>def <span class="ident">createGraph</span>(</p><p>index)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Creazione del grafo utilizzando i dati riguardanti gli archi che sono stati memorizzati nel file
+graph.txt. Se index è maggiore di 0 stiamo facendo un'analisi temporale e quindi passiamo l'indice 
+all'analisi per poter nominare i file che verranno creati.
+Se invece index&lt;0 allora stiamo facendo un'analisi completa e non c'è bisogno di passare index al
+codice dell'analisi</p>
+<p>Arguments:
+    index {int} -- Indica quale slot temporale stiamo analizzando</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.createGraph', this);">Show source &equiv;</a></p>
+  <div id="source-src.createGraph" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">createGraph</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creazione del grafo utilizzando i dati riguardanti gli archi che sono stati memorizzati nel file</span>
+<span class="sd">    graph.txt. Se index è maggiore di 0 stiamo facendo un&#39;analisi temporale e quindi passiamo l&#39;indice </span>
+<span class="sd">    all&#39;analisi per poter nominare i file che verranno creati.</span>
+<span class="sd">    Se invece index&lt;0 allora stiamo facendo un&#39;analisi completa e non c&#39;è bisogno di passare index al</span>
+<span class="sd">    codice dell&#39;analisi</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        index {int} -- Indica quale slot temporale stiamo analizzando</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ogni id dei nodi presenti nel grafo viene mappato in un intero</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="n">Map</span><span class="p">()</span>
+    <span class="n">coordinator</span><span class="o">.</span><span class="n">getAllData</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+
+    <span class="c1">#Creazione del grafo prendendo gli archi dal file in cui li ho salvati</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./src/results/graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">file</span><span class="p">:</span>
+            <span class="n">arrayLine</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">arrayLine</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arrayLine</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        
+    <span class="k">if</span><span class="p">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">Analysis</span><span class="o">.</span><span class="n">startAnalysis</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Analysis</span><span class="o">.</span><span class="n">startAnalysis</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="src.simpleGraph">
+    <p>def <span class="ident">simpleGraph</span>(</p><p>)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Simulazione più semplice, abbiamo un numero di nodi e li inseriamo tutti all'interno
+della rete creando poi il grafo e svolgendo le analisi sul grafo</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.simpleGraph', this);">Show source &equiv;</a></p>
+  <div id="source-src.simpleGraph" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">simpleGraph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulazione più semplice, abbiamo un numero di nodi e li inseriamo tutti all&#39;interno</span>
+<span class="sd">        della rete creando poi il grafo e svolgendo le analisi sul grafo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Per n-1 volte deve essere eseguita la fase di costruzione della routing table.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numNodes</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Generazione del nodo che vuole entrare nella rete</span>
+        <span class="n">joiningNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateNode</span><span class="p">(</span><span class="n">idLen</span><span class="p">)</span>      
+        <span class="c1"># Calcolo del nodo bootstrap</span>
+        <span class="n">bootstrapNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateBootstrapNode</span><span class="p">()</span>
+        <span class="c1"># Inserimento del nuovo nodo nella rete</span>
+        <span class="n">coordinator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
+
+    <span class="n">createGraph</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="src.temporalGraph">
+    <p>def <span class="ident">temporalGraph</span>(</p><p>)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Simulazione dell'inserimento dei nodi all'interno della rete. Vengono inseriti un numero di nodi 
+e poi si svolge l'analisi sul grafo parziale. In questo modo è possibile studiare l'evoluzione della
+rete e del grafo a mano a mano che vengono inseriti i nuovi nodi</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.temporalGraph', this);">Show source &equiv;</a></p>
+  <div id="source-src.temporalGraph" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">temporalGraph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulazione dell&#39;inserimento dei nodi all&#39;interno della rete. Vengono inseriti un numero di nodi </span>
+<span class="sd">    e poi si svolge l&#39;analisi sul grafo parziale. In questo modo è possibile studiare l&#39;evoluzione della</span>
+<span class="sd">    rete e del grafo a mano a mano che vengono inseriti i nuovi nodi</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nTime</span> <span class="o">=</span> <span class="n">numNodes</span> <span class="o">/</span> <span class="n">numSlot</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">numSlot</span><span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">nTime</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">nTime</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="c1"># Generazione del nodo che vuole entrare nella rete</span>
+            <span class="n">joiningNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateNode</span><span class="p">(</span><span class="n">idLen</span><span class="p">)</span>      
+            <span class="c1"># Calcolo del nodo bootstrap</span>
+            <span class="n">bootstrapNode</span> <span class="o">=</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">generateBootstrapNode</span><span class="p">()</span>
+            <span class="c1"># Inserimento del nuovo nodo nella rete</span>
+            <span class="n">coordinator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">joiningNode</span><span class="p">,</span> <span class="n">bootstrapNode</span><span class="p">)</span>
+
+        <span class="n">createGraph</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
 
 
     <h2 class="section-title" id="header-submodules">Sub-modules</h2>
+      <div class="item">
+      <p class="name"><a href="Analysis.m.html">src.Analysis</a></p>
+      
+  
+    <div class="desc"><p>Codice per avviare le analisi del grafo</p></div>
+
+      </div>
       <div class="item">
       <p class="name"><a href="Coordinator.m.html">src.Coordinator</a></p>
       

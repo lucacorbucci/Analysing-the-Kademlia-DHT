@@ -14,10 +14,13 @@ class kBucketList():
     """
 
 
-    def __init__(self, k):
+    def __init__(self, k, mode):
         self.length = 0
         self.maxLength = k
         self.array = []
+        # Mode è 1 se voglio mantenere sempre quelli che ho messo prima
+        # Vale 0 se invece voglio mettere nella KBucket List i più recenti quando è piena
+        self.mode = mode
 
     
     def insert(self, node):
@@ -31,32 +34,63 @@ class kBucketList():
             node: Nodo da inserire nella k bucket list
         """
 
-
-        if(node not in self.array and self.length < self.maxLength):
-            self.array.append(node)
-            self.length+=1
-            return True
+        # Caso in cui mantengo i più vecchi nella KBucket List
+        if(self.mode == 1):
+            if(node not in self.array and self.length < self.maxLength):
+                self.array.append(node)
+                self.length+=1
+                return True
+            else:
+                return False
         else:
-            return False
+            # Caso in cui metto i nuovi nella KBucketList
+            if(node not in self.array and self.length < self.maxLength):
+                self.array.append(node)
+                self.length+=1
+                return True
+            elif (node not in self.array and self.length == self.maxLength):
+                self.array.pop(0)
+                self.array.append(node)
+                return True
+            else:
+                return False
+
     
     def getNodes(self):
+        """
+        Funzione che restituisce i nodi presenti all'interno di una KBucket List
+        
+        Returns:
+            [Array] -- Array con gli id dei nodi della K-Bucket List
+        """
         tmp = []
         for nodes in self.array:
             tmp.append(nodes.id)
         return tmp
 
 
-    def getMappedNodes(self, graph):
+    def getMappedNodes(self, mappa):
+        """
+        Vengono restituiti i nodi che sono all'interno della KBucket List mappati 
+        in un intero.
+        
+        Arguments:
+            mappa {Map} -- mappa id-intero
+        
+        Returns:
+            Array -- Array con i nodi rimappati in interi
+        """
         tmp = []
         for nodes in self.array:
-            if(graph.mapID.has_key(nodes.id)):
-                tmp.append(graph.mapID[nodes.id])
+            if(mappa.mapID.has_key(nodes.id)):
+                tmp.append(mappa.mapID[nodes.id])
             else:
-                id = graph.getCounter()
-                graph.incrementCounter()
-                graph.mapID[nodes.id] = id
+                id = mappa.getCounter()
+                mappa.incrementCounter()
+                mappa.mapID[nodes.id] = id
                 tmp.append(id)
         return tmp
+
 
     def printKBucketList(self):
         """
@@ -73,15 +107,16 @@ class kBucketList():
         Controlla se la coda è piena o no
         
         Returns:
-            Boolean: true se la lista è piena, false altrimenti
+            Boolean -- true se la lista è piena, false altrimenti
         """
         return True if (self.maxLength == self.length) else False
 
     def isEmpty(self):
         """
         Controlla se la coda è vuota o no.
+
         Returns:
-            Boolean: true se la lista è vuota, false altrimenti
+            Boolean -- True se la lista è vuota, False altrimenti
         """
         
         return True if (self.length == 0) else False

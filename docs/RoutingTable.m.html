@@ -1093,7 +1093,7 @@ table {
 <span class="sd">        node: identificatore associato alla routing table</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">bucketListLen</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">bucketListLen</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inizializzazione della routing table</span>
 <span class="sd">        </span>
@@ -1102,7 +1102,7 @@ table {
 <span class="sd">            bucketListLen: indica la lunghezza di ogni kBucketList</span>
 <span class="sd">            node: il nodo associato a questa routing table</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -1110,7 +1110,6 @@ table {
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Aumenta il contatore dei contatti del nodo.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">decrementNumContacts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1120,6 +1119,10 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">-=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">printRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stampa del contenuto della routing table.</span>
+<span class="sd">        Funzione usata per il debug</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span> <span class="s2">&quot;numContacts: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span>
         
         <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
@@ -1130,11 +1133,21 @@ table {
                 <span class="k">print</span> <span class="s2">&quot;****&quot;</span>
 
 
-    <span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        I nodi della routing table vengono restituiti mappati in interi</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            mappa {Map} -- Dizionario che contiene le coppie ID-Intero</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Array -- Array che contiene i nodi della routing table </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">mappa</span><span class="p">)</span>
 
-            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">nodes</span>
 </pre></div>
 
@@ -1171,7 +1184,7 @@ rete kademlia.</p>
 <span class="sd">        node: identificatore associato alla routing table</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">bucketListLen</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">bucketListLen</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inizializzazione della routing table</span>
 <span class="sd">        </span>
@@ -1180,7 +1193,7 @@ rete kademlia.</p>
 <span class="sd">            bucketListLen: indica la lunghezza di ogni kBucketList</span>
 <span class="sd">            node: il nodo associato a questa routing table</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -1188,7 +1201,6 @@ rete kademlia.</p>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Aumenta il contatore dei contatti del nodo.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">decrementNumContacts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1198,6 +1210,10 @@ rete kademlia.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">-=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">printRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stampa del contenuto della routing table.</span>
+<span class="sd">        Funzione usata per il debug</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span> <span class="s2">&quot;numContacts: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span>
         
         <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
@@ -1208,11 +1224,21 @@ rete kademlia.</p>
                 <span class="k">print</span> <span class="s2">&quot;****&quot;</span>
 
 
-    <span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        I nodi della routing table vengono restituiti mappati in interi</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            mappa {Map} -- Dizionario che contiene le coppie ID-Intero</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Array -- Array che contiene i nodi della routing table </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">mappa</span><span class="p">)</span>
 
-            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">nodes</span>
 </pre></div>
 
@@ -1260,7 +1286,7 @@ rete kademlia.</p>
             
   <div class="item">
     <div class="name def" id="src.RoutingTable.RoutingTable.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, idLen, bucketListLen, node)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, idLen, bucketListLen, node, mode)</p>
     </div>
     
 
@@ -1274,7 +1300,7 @@ rete kademlia.</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.RoutingTable.RoutingTable.__init__', this);">Show source &equiv;</a></p>
   <div id="source-src.RoutingTable.RoutingTable.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">bucketListLen</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">bucketListLen</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inizializzazione della routing table</span>
 <span class="sd">    </span>
@@ -1283,7 +1309,7 @@ rete kademlia.</p>
 <span class="sd">        bucketListLen: indica la lunghezza di ogni kBucketList</span>
 <span class="sd">        node: il nodo associato a questa routing table</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span> <span class="o">=</span> <span class="p">[</span><span class="n">kBucketList</span><span class="p">(</span><span class="n">bucketListLen</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">idLen</span><span class="p">)]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span> <span class="o">=</span> <span class="mi">0</span>
 </pre></div>
@@ -1321,19 +1347,34 @@ rete kademlia.</p>
             
   <div class="item">
     <div class="name def" id="src.RoutingTable.RoutingTable.getRoutingTable">
-    <p>def <span class="ident">getRoutingTable</span>(</p><p>self, graph)</p>
+    <p>def <span class="ident">getRoutingTable</span>(</p><p>self, mappa)</p>
     </div>
     
 
     
   
+    <div class="desc"><p>I nodi della routing table vengono restituiti mappati in interi</p>
+<p>Arguments:
+    mappa {Map} -- Dizionario che contiene le coppie ID-Intero</p>
+<p>Returns:
+    Array -- Array che contiene i nodi della routing table</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.RoutingTable.RoutingTable.getRoutingTable', this);">Show source &equiv;</a></p>
   <div id="source-src.RoutingTable.RoutingTable.getRoutingTable" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    I nodi della routing table vengono restituiti mappati in interi</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        mappa {Map} -- Dizionario che contiene le coppie ID-Intero</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Array -- Array che contiene i nodi della routing table </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>
-        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">kbucket</span><span class="o">.</span><span class="n">getMappedNodes</span><span class="p">(</span><span class="n">mappa</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">nodes</span>
 </pre></div>
 
@@ -1376,10 +1417,16 @@ rete kademlia.</p>
 
     
   
+    <div class="desc"><p>Stampa del contenuto della routing table.
+Funzione usata per il debug</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.RoutingTable.RoutingTable.printRoutingTable', this);">Show source &equiv;</a></p>
   <div id="source-src.RoutingTable.RoutingTable.printRoutingTable" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">printRoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stampa del contenuto della routing table.</span>
+<span class="sd">    Funzione usata per il debug</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">print</span> <span class="s2">&quot;numContacts: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numContacts</span>
     
     <span class="k">for</span> <span class="n">kbucket</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routingTable</span><span class="p">:</span>

@@ -1112,7 +1112,7 @@ table {
 <span class="sd">        idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Init della classe Coordinator.</span>
 
@@ -1127,6 +1127,7 @@ table {
 <span class="sd">            numNodes: numero di nodi che faranno parte della rete</span>
 <span class="sd">            idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">            maxBucketList: lunghezza massima dei bucketList</span>
+<span class="sd">            mode: gestione della KBucket List, se è 1 mantengo i più vecchi, se è 0 mantengo i più recenti</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1134,6 +1135,7 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="o">=</span> <span class="n">idLen</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span> <span class="o">=</span> <span class="n">maxBucketList</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
 
         <span class="c1"># Generazione del primo nodo che entra nella rete</span>
         <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="n">idLen</span><span class="p">))</span>
@@ -1151,7 +1153,7 @@ table {
 <span class="sd">            node: il nodo da inserire all&#39;interno della struttura</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">ID</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>   
             <span class="k">raise</span> <span class="n">duplicateNode</span>
@@ -1410,20 +1412,33 @@ table {
         
         <span class="k">return</span> <span class="n">randomID</span>
       
-    <span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Vengono generate le coppie id-id dove il primo è il nodo sorgente e il secondo</span>
+<span class="sd">        è il nodo destinazione di un arco del grafo.</span>
+<span class="sd">        Questi archi vengono memorizzati nel file graph.txt e possono essere anche restituiti in un dizionario</span>
+<span class="sd">        che sarà nel formato:</span>
+<span class="sd">        {id1:[1,2,3], id2:[4,6,7]}</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            graph {Map} -- mappa che utilizziamo per mappare gli ID dei nodi a degli interi</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary -- Dizionario che contiene gli archi del grafo</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./src/results/graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
     
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-                <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
-                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
-                    <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
-                    <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                    <span class="n">mappa</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                    <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
                     
-                <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">mappa</span><span class="p">)</span>
                 <span class="n">data</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">contacts</span>
                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
                     <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1477,7 +1492,7 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">        idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Init della classe Coordinator.</span>
 
@@ -1492,6 +1507,7 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">            numNodes: numero di nodi che faranno parte della rete</span>
 <span class="sd">            idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">            maxBucketList: lunghezza massima dei bucketList</span>
+<span class="sd">            mode: gestione della KBucket List, se è 1 mantengo i più vecchi, se è 0 mantengo i più recenti</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1499,6 +1515,7 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="o">=</span> <span class="n">idLen</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span> <span class="o">=</span> <span class="n">maxBucketList</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
 
         <span class="c1"># Generazione del primo nodo che entra nella rete</span>
         <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="n">idLen</span><span class="p">))</span>
@@ -1516,7 +1533,7 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 <span class="sd">            node: il nodo da inserire all&#39;interno della struttura</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">ID</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>   
             <span class="k">raise</span> <span class="n">duplicateNode</span>
@@ -1775,20 +1792,33 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
         
         <span class="k">return</span> <span class="n">randomID</span>
       
-    <span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Vengono generate le coppie id-id dove il primo è il nodo sorgente e il secondo</span>
+<span class="sd">        è il nodo destinazione di un arco del grafo.</span>
+<span class="sd">        Questi archi vengono memorizzati nel file graph.txt e possono essere anche restituiti in un dizionario</span>
+<span class="sd">        che sarà nel formato:</span>
+<span class="sd">        {id1:[1,2,3], id2:[4,6,7]}</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            graph {Map} -- mappa che utilizziamo per mappare gli ID dei nodi a degli interi</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary -- Dizionario che contiene gli archi del grafo</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./src/results/graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
     
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-                <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
-                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
-                    <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
-                    <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                    <span class="n">mappa</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                    <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
                     
-                <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">mappa</span><span class="p">)</span>
                 <span class="n">data</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">contacts</span>
                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
                     <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1848,6 +1878,16 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
 
             </div>
             <div class="item">
+            <p id="src.Coordinator.coordinator.mode" class="name">var <span class="ident">mode</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="src.Coordinator.coordinator.numNodes" class="name">var <span class="ident">numNodes</span></p>
             
 
@@ -1881,7 +1921,7 @@ e memorizza le routing table di tutti i nodi che fanno parte della rete.    </p>
             
   <div class="item">
     <div class="name def" id="src.Coordinator.coordinator.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, numNodes, idLen, maxBucketList)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, numNodes, idLen, maxBucketList, mode)</p>
     </div>
     
 
@@ -1896,11 +1936,12 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
 <p>Arguments:
     numNodes: numero di nodi che faranno parte della rete
     idLen: lunghezza dell'id di ognuno dei nodi
-    maxBucketList: lunghezza massima dei bucketList</p></div>
+    maxBucketList: lunghezza massima dei bucketList
+    mode: gestione della KBucket List, se è 1 mantengo i più vecchi, se è 0 mantengo i più recenti</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.__init__', this);">Show source &equiv;</a></p>
   <div id="source-src.Coordinator.coordinator.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numNodes</span><span class="p">,</span> <span class="n">idLen</span><span class="p">,</span> <span class="n">maxBucketList</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Init della classe Coordinator.</span>
 <span class="sd">    Quando viene creato il coordinato crea un primo nodo che prende un ID generato random</span>
@@ -1913,6 +1954,7 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
 <span class="sd">        numNodes: numero di nodi che faranno parte della rete</span>
 <span class="sd">        idLen: lunghezza dell&#39;id di ognuno dei nodi</span>
 <span class="sd">        maxBucketList: lunghezza massima dei bucketList</span>
+<span class="sd">        mode: gestione della KBucket List, se è 1 mantengo i più vecchi, se è 0 mantengo i più recenti</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1920,6 +1962,7 @@ In questo modo possiamo accedere velocemente alla routing table di un nodo.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">idLen</span> <span class="o">=</span> <span class="n">idLen</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span> <span class="o">=</span> <span class="n">maxBucketList</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
     <span class="c1"># Generazione del primo nodo che entra nella rete</span>
     <span class="n">firstNode</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generateId</span><span class="p">(</span><span class="n">idLen</span><span class="p">))</span>
     <span class="k">try</span><span class="p">:</span>
@@ -1994,7 +2037,7 @@ di joiningNode il nodo che ha id come identificatore.</p>
 <span class="sd">        node: il nodo da inserire all&#39;interno della struttura</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">ID</span><span class="p">)):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoutingTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idLen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBucketList</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">savedNodes</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="k">else</span><span class="p">:</span>   
         <span class="k">raise</span> <span class="n">duplicateNode</span>
@@ -2305,29 +2348,50 @@ l'id generato non sia stato già precedentemente assegnato</p>
             
   <div class="item">
     <div class="name def" id="src.Coordinator.coordinator.getAllData">
-    <p>def <span class="ident">getAllData</span>(</p><p>self, graph)</p>
+    <p>def <span class="ident">getAllData</span>(</p><p>self, mappa)</p>
     </div>
     
 
     
   
+    <div class="desc"><p>Vengono generate le coppie id-id dove il primo è il nodo sorgente e il secondo
+è il nodo destinazione di un arco del grafo.
+Questi archi vengono memorizzati nel file graph.txt e possono essere anche restituiti in un dizionario
+che sarà nel formato:
+{id1:[1,2,3], id2:[4,6,7]}</p>
+<p>Arguments:
+    graph {Map} -- mappa che utilizziamo per mappare gli ID dei nodi a degli interi</p>
+<p>Returns:
+    Dictionary -- Dizionario che contiene gli archi del grafo</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Coordinator.coordinator.getAllData', this);">Show source &equiv;</a></p>
   <div id="source-src.Coordinator.coordinator.getAllData" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getAllData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappa</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vengono generate le coppie id-id dove il primo è il nodo sorgente e il secondo</span>
+<span class="sd">    è il nodo destinazione di un arco del grafo.</span>
+<span class="sd">    Questi archi vengono memorizzati nel file graph.txt e possono essere anche restituiti in un dizionario</span>
+<span class="sd">    che sarà nel formato:</span>
+<span class="sd">    {id1:[1,2,3], id2:[4,6,7]}</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        graph {Map} -- mappa che utilizziamo per mappare gli ID dei nodi a degli interi</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary -- Dizionario che contiene gli archi del grafo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./src/results/graph.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="k">if</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
-                <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">mappa</span><span class="o">.</span><span class="n">getCounter</span><span class="p">()</span>
+                <span class="n">mappa</span><span class="o">.</span><span class="n">incrementCounter</span><span class="p">()</span>
+                <span class="n">mappa</span><span class="o">.</span><span class="n">mapID</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
                 
-            <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">contacts</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">getRoutingTable</span><span class="p">(</span><span class="n">mappa</span><span class="p">)</span>
             <span class="n">data</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">contacts</span>
             <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
                 <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>

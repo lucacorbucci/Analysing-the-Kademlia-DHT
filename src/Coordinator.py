@@ -26,7 +26,7 @@ class coordinator():
         idLen: lunghezza dell'id di ognuno dei nodi
     """
 
-    def __init__(self, numNodes, idLen, maxBucketList):
+    def __init__(self, numNodes, idLen, maxBucketList, mode):
         """
         Init della classe Coordinator.
 
@@ -41,6 +41,7 @@ class coordinator():
             numNodes: numero di nodi che faranno parte della rete
             idLen: lunghezza dell'id di ognuno dei nodi
             maxBucketList: lunghezza massima dei bucketList
+            mode: gestione della KBucket List, se è 1 mantengo i più vecchi, se è 0 mantengo i più recenti
         """
         self.savedNodes = 0
         self.structure = {}
@@ -48,6 +49,7 @@ class coordinator():
         self.id = {}
         self.idLen = idLen
         self.maxBucketList = maxBucketList
+        self.mode = mode
 
         # Generazione del primo nodo che entra nella rete
         firstNode = Node(self.generateId(idLen))
@@ -65,7 +67,7 @@ class coordinator():
             node: il nodo da inserire all'interno della struttura
         """
         if(not self.structure.has_key(ID)):
-            self.structure[ID] = RoutingTable(self.idLen, self.maxBucketList, node)
+            self.structure[ID] = RoutingTable(self.idLen, self.maxBucketList, node, self.mode)
             self.savedNodes += 1
         else:   
             raise duplicateNode
@@ -324,20 +326,33 @@ class coordinator():
         
         return randomID
       
-    def getAllData(self, graph):
+    def getAllData(self, mappa):
+        """
+        Vengono generate le coppie id-id dove il primo è il nodo sorgente e il secondo
+        è il nodo destinazione di un arco del grafo.
+        Questi archi vengono memorizzati nel file graph.txt e possono essere anche restituiti in un dizionario
+        che sarà nel formato:
+        {id1:[1,2,3], id2:[4,6,7]}
+
+        Arguments:
+            graph {Map} -- mappa che utilizziamo per mappare gli ID dei nodi a degli interi
+        
+        Returns:
+            Dictionary -- Dizionario che contiene gli archi del grafo
+        """
         data = {}
         id = ""
-        with open('graph.txt', 'w') as writer:
+        with open('./results/graph.txt', 'w') as writer:
     
             for key, value in self.structure.iteritems():
-                if(graph.mapID.has_key(key)):
-                    id = graph.mapID[key]
+                if(mappa.mapID.has_key(key)):
+                    id = mappa.mapID[key]
                 else:
-                    id = graph.getCounter()
-                    graph.incrementCounter()
-                    graph.mapID[key] = id
+                    id = mappa.getCounter()
+                    mappa.incrementCounter()
+                    mappa.mapID[key] = id
                     
-                contacts = value.getRoutingTable(graph)
+                contacts = value.getRoutingTable(mappa)
                 data[id] = contacts
                 for c in contacts:
                     writer.write(str(id) + " " + str(c) + "\n")

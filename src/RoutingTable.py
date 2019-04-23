@@ -15,7 +15,7 @@ class RoutingTable():
         node: identificatore associato alla routing table
     """
 
-    def __init__(self, idLen, bucketListLen, node):
+    def __init__(self, idLen, bucketListLen, node, mode):
         """
         Inizializzazione della routing table
         
@@ -24,7 +24,7 @@ class RoutingTable():
             bucketListLen: indica la lunghezza di ogni kBucketList
             node: il nodo associato a questa routing table
         """
-        self.routingTable = [kBucketList(bucketListLen) for y in range(idLen)]
+        self.routingTable = [kBucketList(bucketListLen, mode) for y in range(idLen)]
         self.node = node
         self.numContacts = 0
 
@@ -32,7 +32,6 @@ class RoutingTable():
         """
         Aumenta il contatore dei contatti del nodo.
         """
-
         self.numContacts += 1
 
     def decrementNumContacts(self):
@@ -42,6 +41,10 @@ class RoutingTable():
         self.numContacts -= 1
 
     def printRoutingTable(self):
+        """
+        Stampa del contenuto della routing table.
+        Funzione usata per il debug
+        """
         print "numContacts: ", self.numContacts
         
         for kbucket in self.routingTable:
@@ -52,9 +55,19 @@ class RoutingTable():
                 print "****"
 
 
-    def getRoutingTable(self, graph):
+    def getRoutingTable(self, mappa):
+        """
+        I nodi della routing table vengono restituiti mappati in interi
+        
+        Arguments:
+            mappa {Map} -- Dizionario che contiene le coppie ID-Intero
+        
+        Returns:
+            Array -- Array che contiene i nodi della routing table 
+        """
+        
         nodes = []
         for kbucket in self.routingTable:
+            nodes += kbucket.getMappedNodes(mappa)
 
-            nodes += kbucket.getMappedNodes(graph)
         return nodes

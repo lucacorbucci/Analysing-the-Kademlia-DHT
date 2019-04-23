@@ -19,7 +19,6 @@ class Node():
         """
         print self.id
 
-    def findNode(self,id):
-        pass
+
     
 

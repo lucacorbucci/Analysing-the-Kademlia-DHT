@@ -1050,7 +1050,6 @@ table {
           
   <ul>
     <li class="mono"><a href="#src.Map.Map.__init__">__init__</a></li>
-    <li class="mono"><a href="#src.Map.Map.addMap">addMap</a></li>
     <li class="mono"><a href="#src.Map.Map.getCounter">getCounter</a></li>
     <li class="mono"><a href="#src.Map.Map.incrementCounter">incrementCounter</a></li>
   </ul>
@@ -1091,18 +1090,38 @@ table {
 <span class="n">sys</span><span class="o">.</span><span class="n">setdefaultencoding</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">Map</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Classe che viene utilizzata per mantenere il mapping tra l&#39;id di un nodo </span>
+<span class="sd">    e un intero e per memorizzare un contatore che viene incrementato ogni volta</span>
+<span class="sd">    che viene inserito una nuova coppia all&#39;interno del dizionario. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mapID</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">def</span> <span class="nf">addMap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">map</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mapID</span> <span class="o">=</span> <span class="nb">map</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    def addMap(self,map):</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Aggiunta di un nuovo </span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            map {[type]} -- [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        self.mapID = map</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">incrementCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Incrementa il contatore che indica quanti mapping sono memorizzati </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">getCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viene restituito il numero di coppie memorizzate nel dizionario che contiene il mapping ID-intero</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Int -- Numero di coppie memorizzate nella mappa</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
 </pre></div>
 
@@ -1119,22 +1138,45 @@ table {
       <p id="src.Map.Map" class="name">class <span class="ident">Map</span></p>
       
   
+    <div class="desc"><p>Classe che viene utilizzata per mantenere il mapping tra l'id di un nodo 
+e un intero e per memorizzare un contatore che viene incrementato ogni volta
+che viene inserito una nuova coppia all'interno del dizionario.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Map.Map', this);">Show source &equiv;</a></p>
   <div id="source-src.Map.Map" class="source">
     <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Map</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Classe che viene utilizzata per mantenere il mapping tra l&#39;id di un nodo </span>
+<span class="sd">    e un intero e per memorizzare un contatore che viene incrementato ogni volta</span>
+<span class="sd">    che viene inserito una nuova coppia all&#39;interno del dizionario. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mapID</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">def</span> <span class="nf">addMap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">map</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mapID</span> <span class="o">=</span> <span class="nb">map</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    def addMap(self,map):</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Aggiunta di un nuovo </span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            map {[type]} -- [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        self.mapID = map</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">incrementCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Incrementa il contatore che indica quanti mapping sono memorizzati </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">getCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viene restituito il numero di coppie memorizzate nel dizionario che contiene il mapping ID-intero</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Int -- Numero di coppie memorizzate nella mappa</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
 </pre></div>
 
@@ -1193,27 +1235,6 @@ table {
   
             
   <div class="item">
-    <div class="name def" id="src.Map.Map.addMap">
-    <p>def <span class="ident">addMap</span>(</p><p>self, map)</p>
-    </div>
-    
-
-    
-  
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Map.Map.addMap', this);">Show source &equiv;</a></p>
-  <div id="source-src.Map.Map.addMap" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">addMap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">map</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">mapID</span> <span class="o">=</span> <span class="nb">map</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
     <div class="name def" id="src.Map.Map.getCounter">
     <p>def <span class="ident">getCounter</span>(</p><p>self)</p>
     </div>
@@ -1221,10 +1242,19 @@ table {
 
     
   
+    <div class="desc"><p>Viene restituito il numero di coppie memorizzate nel dizionario che contiene il mapping ID-intero</p>
+<p>Returns:
+    Int -- Numero di coppie memorizzate nella mappa</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Map.Map.getCounter', this);">Show source &equiv;</a></p>
   <div id="source-src.Map.Map.getCounter" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Viene restituito il numero di coppie memorizzate nel dizionario che contiene il mapping ID-intero</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Int -- Numero di coppie memorizzate nella mappa</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
 </pre></div>
 
@@ -1242,10 +1272,13 @@ table {
 
     
   
+    <div class="desc"><p>Incrementa il contatore che indica quanti mapping sono memorizzati</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.Map.Map.incrementCounter', this);">Show source &equiv;</a></p>
   <div id="source-src.Map.Map.incrementCounter" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">incrementCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Incrementa il contatore che indica quanti mapping sono memorizzati </span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 
