@@ -26,12 +26,20 @@ class kBucketList():
     def insert(self, node):
         """
         Inserimento all'interno della k Bucket List.
-        Se la lista è piena controllo se il primo nodo è ancora attivo, se è attivo scarto il nuovo
-        e sposto la testa in coda alla lista. Se non è più attivo elimino la testa 
-        e metto in coda il nuovo nodo.
+        Ci sono due possibilità, se mode=1 allora vuol dire che quando inserisco un nuovo nodo
+        devo controllare se la k-bucket list è piena, in quel caso non aggiungo il nuovo nodo.
+        Se invece mode=0 allora, se la k-bucket list è piena tolgo il primo nodo della lista (che sarebbe il più vecchio)
+        e aggiungo in fondo alla coda il nuovo nodo.
+        Se c'è spazio nella coda aggiungo il nodo in fondo alla lista in entrambi i casi.
         
         Arguments:
             node: Nodo da inserire nella k bucket list
+        Returns:
+            [Int] -- 1 se ho effettuato un inserimento nella lista e se aumento anche il numero di nodi
+            che sono contenuti all'interno della lista.
+            0 se inserisco il nuovo nodo nela lista sostituendo il vecchio, quindi non devo aumentare il numero 
+            di nodi che sono presenti nella lista.
+            -1 se non inserisco il nodo nella lista.
         """
 
         # Caso in cui mantengo i più vecchi nella KBucket List
@@ -39,21 +47,21 @@ class kBucketList():
             if(node not in self.array and self.length < self.maxLength):
                 self.array.append(node)
                 self.length+=1
-                return True
+                return 1
             else:
-                return False
+                return -1
         else:
-            # Caso in cui metto i nuovi nella KBucketList
             if(node not in self.array and self.length < self.maxLength):
                 self.array.append(node)
                 self.length+=1
-                return True
+                return 1
             elif (node not in self.array and self.length == self.maxLength):
-                self.array.pop(0)
+                x = self.array.pop(0)
+                
                 self.array.append(node)
-                return True
+                return 0
             else:
-                return False
+                return -1
 
     
     def getNodes(self):

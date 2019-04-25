@@ -24,6 +24,7 @@ def simpleGraph():
         Simulazione più semplice, abbiamo un numero di nodi e li inseriamo tutti all'interno
         della rete creando poi il grafo e svolgendo le analisi sul grafo
     """
+
     # Per n-1 volte deve essere eseguita la fase di costruzione della routing table.
     for i in range(numNodes-1):
         # Generazione del nodo che vuole entrare nella rete
@@ -111,7 +112,7 @@ def checkInput():
             nodeNumber: (Intero > 0) Numero di nodi che vogliamo inserire nella rete
             bitsOfTheIdentifier: (Intero > 0) lunghezza di ogni identificatore dei nodi 
             maxBucketList: (Intero > 0) lunghezza massima delle bucket List 
-            KBucketListManagment: Gestione della KBucketList, scrivere 1 per mantenere i nodi più vecchi e 0 per inserire i nuovi
+            KBucketListManagment (mode): Gestione della KBucketList, scrivere 1 per mantenere i nodi più vecchi e 0 per inserire i nuovi
             typeOfAnalysis: Tipo di analisi, scrivere 1 per l'analisi semplice e 0 per la temporale
             numSlot: (Intero > 0) specificare in quanti slot dividere i dati da inserire nella rete (scegliere un numero divisibile per nodeNumber)''')
     else:

@@ -97,8 +97,6 @@ class coordinator():
         Returns:
             Il nuovo nodo che è stato creato
         """
-        # TODO
-        # if(Ho finito i possibili identificatori)
         
         id = self.generateId(len)
         
@@ -190,7 +188,7 @@ class coordinator():
         joiningStructure = self.structure[joiningNode.id]
         node = self.structure[id].node
         position = self.computeDistance(joiningNode.id, id, True)
-        if (joiningStructure.routingTable[position].insert(node)):
+        if (joiningStructure.routingTable[position].insert(node)>0):
             (joiningStructure).incrementNumContacts()
 
 
@@ -247,12 +245,12 @@ class coordinator():
         """ 
         
         position = self.computeDistance(joiningNode.id,bootstrapNode.id, True)
-        if(self.structure[bootstrapNode.id].routingTable[position].insert(joiningNode)):
+        if(self.structure[bootstrapNode.id].routingTable[position].insert(joiningNode)>0):
             (self.structure[bootstrapNode.id]).incrementNumContacts()
         if(not self.structure.has_key(joiningNode.id)):
             self.addNodeInStructure(joiningNode.id, joiningNode)
 
-        if(self.structure[joiningNode.id].routingTable[position].insert(bootstrapNode)):
+        if(self.structure[joiningNode.id].routingTable[position].insert(bootstrapNode)>0):
             (self.structure[joiningNode.id]).incrementNumContacts()
 
         return position
@@ -369,4 +367,6 @@ class coordinator():
         for key, value in self.structure.iteritems():
             print "ID", key 
             print value.printRoutingTable()
+            print ""
+
 

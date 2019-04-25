@@ -43,7 +43,7 @@ def startAnalysis(graph, index = -1):
     with open('./results/' + str(index) + 'results.txt', 'w') as writer:
         
         # Queste analisi le faccio sia sul grafo completo che sugli snapshot
-
+        
         writer.write("Numero Archi " + str(graph.number_of_edges()) + "\n")
 
         writer.write("Numero Nodi " + str(len(graph)) + "\n")
@@ -64,6 +64,7 @@ def startAnalysis(graph, index = -1):
             plot_inDegree_hist(graph, index)
             plot_outDegree_hist(graph, index)
 
+            writer.write("Grado medio del " + str(nx.average_degree_connectivity(graph)) + "\n")
 
             writer.write("Centralità Armonica " + str(nx.harmonic_centrality(graph)) + "\n")
 
@@ -73,8 +74,18 @@ def startAnalysis(graph, index = -1):
 
 
             writer.write("Clustering Coefficient " + str(nx.clustering(graph)) + "\n")
-
+                
             
+        '''
+        options = {
+                'node_color': 'black',
+                'node_size': 5,
+                'width': 0.5,
+            }
+        plt.subplot()
+        nx.draw_circular(graph, **options)
+        plt.savefig("./results/" + str(index) + "Grafo" + str(len(graph)) + ".png", bbox_inches='tight')
+        '''
 
         
 

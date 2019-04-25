@@ -24,16 +24,8 @@ class Map():
     def __init__(self):
         self.mapID = {}
         self.count = 0
-    '''
-    def addMap(self,map):
-        """
-        Aggiunta di un nuovo 
-        
-        Arguments:
-            map {[type]} -- [description]
-        """
-        self.mapID = map
-    '''
+    
+    
     def incrementCounter(self):
         """Incrementa il contatore che indica quanti mapping sono memorizzati 
         """
