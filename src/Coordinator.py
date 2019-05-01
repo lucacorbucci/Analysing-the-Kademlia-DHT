@@ -364,9 +364,15 @@ class coordinator():
         print ""
         print ""
         print ""
+        array = []
+        kList = []
         for key, value in self.structure.iteritems():
-            print "ID", key 
-            print value.printRoutingTable()
-            print ""
+            #print "ID", key 
+            #print value.printRoutingTable()
+            #print ""
+            array.append(value.numContacts)
+            for kBucket in value.routingTable:
+                kList.append(kBucket.length)
 
-
+        print "Routing Table: " , array
+        print "BucketList: " , kList

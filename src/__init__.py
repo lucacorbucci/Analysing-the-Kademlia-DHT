@@ -83,7 +83,7 @@ def createGraph(index):
         for line in file:
             arrayLine = line.strip('\n').split(" ")
             graph.add_edge(arrayLine[0], arrayLine[1])
-        
+
     if(index >= 0):
         Analysis.startAnalysis(graph, index=index)
     else:
@@ -112,7 +112,7 @@ def checkInput():
             nodeNumber: (Intero > 0) Numero di nodi che vogliamo inserire nella rete
             bitsOfTheIdentifier: (Intero > 0) lunghezza di ogni identificatore dei nodi 
             maxBucketList: (Intero > 0) lunghezza massima delle bucket List 
-            KBucketListManagment (mode): Gestione della KBucketList, scrivere 1 per mantenere i nodi più vecchi e 0 per inserire i nuovi
+            KBucketListManagment (mode): Gestione della KBucketList, scrivere 1 per mantenere i nodi più vecchi e 0 per inserire i nuovi e 2 per una scelta random
             typeOfAnalysis: Tipo di analisi, scrivere 1 per l'analisi semplice e 0 per la temporale
             numSlot: (Intero > 0) specificare in quanti slot dividere i dati da inserire nella rete (scegliere un numero divisibile per nodeNumber)''')
     else:
@@ -131,7 +131,7 @@ def checkInput():
             if(numSlot < 0):
                 print "numSlot: input non valido"
     
-        if(numNodes < 0 or idLen < 0 or maxBucketList < 0 or simple<0 or simple > 1 or mode < 0):
+        if(numNodes < 0 or idLen < 0 or maxBucketList < 0 or simple<0 or simple > 1 or mode < 0 or mode > 2):
             print "Input non valido"
             return False
         else:

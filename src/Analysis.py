@@ -39,8 +39,10 @@ def startAnalysis(graph, index = -1):
         stiamo lavorando (default: {-1})
     """
     print "INDEX ", index
+    print 
     
-    with open('./results/' + str(index) + 'results.txt', 'w') as writer:
+    
+    with open('./results/' + str(index) + '20results.txt', 'w') as writer:
         
         # Queste analisi le faccio sia sul grafo completo che sugli snapshot
         
@@ -55,26 +57,25 @@ def startAnalysis(graph, index = -1):
         writer.write("Diameter " + str(nx.diameter(graph.to_undirected())) + "\n")
 
         writer.write("Average Shortest Path Length " + str(nx.average_shortest_path_length(graph.to_undirected())) + "\n")
-
+        
+        writer.write("Average Clustering" + str(nx.average_clustering(graph.to_undirected())))
         
         # Queste analisi le faccio solamente sul grafo completo
-        if(index < 0):
-            plot_inDegree_dist(graph, index)
-            plot_outDegree_dist(graph, index)
-            plot_inDegree_hist(graph, index)
-            plot_outDegree_hist(graph, index)
+        #if(index < 0):
+         #   plot_inDegree_dist(graph, index)
+          #  plot_outDegree_dist(graph, index)
+           # plot_inDegree_hist(graph, index)
+            #plot_outDegree_hist(graph, index)
 
-            writer.write("Grado medio del " + str(nx.average_degree_connectivity(graph)) + "\n")
+            
+            #writer.write("Centralità Armonica " + str(nx.harmonic_centrality(graph)) + "\n")
 
-            writer.write("Centralità Armonica " + str(nx.harmonic_centrality(graph)) + "\n")
+            #writer.write("IN Degree Centrality " + str(nx.in_degree_centrality(graph)) + "\n")
 
-            writer.write("IN Degree Centrality " + str(nx.in_degree_centrality(graph)) + "\n")
-
-            writer.write("OUT Degree Centrality " + str(nx.out_degree_centrality(graph)) + "\n")
+            #writer.write("OUT Degree Centrality " + str(nx.out_degree_centrality(graph)) + "\n")
 
 
-            writer.write("Clustering Coefficient " + str(nx.clustering(graph)) + "\n")
-                
+           
             
         '''
         options = {
@@ -82,10 +83,11 @@ def startAnalysis(graph, index = -1):
                 'node_size': 5,
                 'width': 0.5,
             }
-        plt.subplot()
-        nx.draw_circular(graph, **options)
-        plt.savefig("./results/" + str(index) + "Grafo" + str(len(graph)) + ".png", bbox_inches='tight')
         '''
+        #plt.subplot()
+        #nx.draw_circular(graph, **options)
+        #plt.savefig("./results/" + str(index) + "Grafo" + str(len(graph)) + ".png", bbox_inches='tight')
+    
 
         
 

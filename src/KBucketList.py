@@ -1,4 +1,5 @@
 # coding=utf-8
+import random 
 
 class kBucketList():
     """
@@ -50,7 +51,8 @@ class kBucketList():
                 return 1
             else:
                 return -1
-        else:
+        # Caso in cui inseriamo i nodi nuovi
+        elif(self.mode == 0):
             if(node not in self.array and self.length < self.maxLength):
                 self.array.append(node)
                 self.length+=1
@@ -60,6 +62,26 @@ class kBucketList():
                 
                 self.array.append(node)
                 return 0
+            else:
+                return -1
+        # Caso random
+        else:
+            if(node not in self.array and self.length < self.maxLength):
+                self.array.append(node)
+                self.length+=1
+                return 1
+            elif (node not in self.array and self.length == self.maxLength):
+                rand = random.randint(0,1)
+                # Se rand è 0 mantengo il vecchio e scarto il nuovo. Il vecchio viene messo in fondo alla lista
+                if(rand == 0):
+                    x = self.array.pop(0)
+                    self.array.append(x)
+                    return 0
+                # Se rand è 1 tolgo il vecchio e metto il nuovo
+                else:
+                    x = self.array.pop(0)
+                    self.array.append(node)
+                    return 0
             else:
                 return -1
 

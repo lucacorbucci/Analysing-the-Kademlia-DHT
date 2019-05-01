@@ -1079,6 +1079,7 @@ table {
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList" class="source">
     <div class="codehilite"><pre><span></span><span class="c1"># coding=utf-8</span>
+<span class="kn">import</span> <span class="nn">random</span> 
 
 <span class="k">class</span> <span class="nc">kBucketList</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1106,12 +1107,20 @@ table {
     <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inserimento all&#39;interno della k Bucket List.</span>
-<span class="sd">        Se la lista è piena controllo se il primo nodo è ancora attivo, se è attivo scarto il nuovo</span>
-<span class="sd">        e sposto la testa in coda alla lista. Se non è più attivo elimino la testa </span>
-<span class="sd">        e metto in coda il nuovo nodo.</span>
+<span class="sd">        Ci sono due possibilità, se mode=1 allora vuol dire che quando inserisco un nuovo nodo</span>
+<span class="sd">        devo controllare se la k-bucket list è piena, in quel caso non aggiungo il nuovo nodo.</span>
+<span class="sd">        Se invece mode=0 allora, se la k-bucket list è piena tolgo il primo nodo della lista (che sarebbe il più vecchio)</span>
+<span class="sd">        e aggiungo in fondo alla coda il nuovo nodo.</span>
+<span class="sd">        Se c&#39;è spazio nella coda aggiungo il nodo in fondo alla lista in entrambi i casi.</span>
 <span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            node: Nodo da inserire nella k bucket list</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [Int] -- 1 se ho effettuato un inserimento nella lista e se aumento anche il numero di nodi</span>
+<span class="sd">            che sono contenuti all&#39;interno della lista.</span>
+<span class="sd">            0 se inserisco il nuovo nodo nela lista sostituendo il vecchio, quindi non devo aumentare il numero </span>
+<span class="sd">            di nodi che sono presenti nella lista.</span>
+<span class="sd">            -1 se non inserisco il nodo nella lista.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Caso in cui mantengo i più vecchi nella KBucket List</span>
@@ -1119,21 +1128,42 @@ table {
             <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-                <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">False</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Caso in cui metto i nuovi nella KBucketList</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c1"># Caso in cui inseriamo i nodi nuovi</span>
+        <span class="k">elif</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-                <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="mi">1</span>
             <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-                <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c1"># Caso random</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">return</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="n">rand</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># Se rand è 0 mantengo il vecchio e scarto il nuovo. Il vecchio viene messo in fondo alla lista</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">rand</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="c1"># Se rand è 1 tolgo il vecchio e metto il nuovo</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 
     
     <span class="k">def</span> <span class="nf">getNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1252,12 +1282,20 @@ il primo elemento della lista alla fine.</p>
     <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inserimento all&#39;interno della k Bucket List.</span>
-<span class="sd">        Se la lista è piena controllo se il primo nodo è ancora attivo, se è attivo scarto il nuovo</span>
-<span class="sd">        e sposto la testa in coda alla lista. Se non è più attivo elimino la testa </span>
-<span class="sd">        e metto in coda il nuovo nodo.</span>
+<span class="sd">        Ci sono due possibilità, se mode=1 allora vuol dire che quando inserisco un nuovo nodo</span>
+<span class="sd">        devo controllare se la k-bucket list è piena, in quel caso non aggiungo il nuovo nodo.</span>
+<span class="sd">        Se invece mode=0 allora, se la k-bucket list è piena tolgo il primo nodo della lista (che sarebbe il più vecchio)</span>
+<span class="sd">        e aggiungo in fondo alla coda il nuovo nodo.</span>
+<span class="sd">        Se c&#39;è spazio nella coda aggiungo il nodo in fondo alla lista in entrambi i casi.</span>
 <span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            node: Nodo da inserire nella k bucket list</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [Int] -- 1 se ho effettuato un inserimento nella lista e se aumento anche il numero di nodi</span>
+<span class="sd">            che sono contenuti all&#39;interno della lista.</span>
+<span class="sd">            0 se inserisco il nuovo nodo nela lista sostituendo il vecchio, quindi non devo aumentare il numero </span>
+<span class="sd">            di nodi che sono presenti nella lista.</span>
+<span class="sd">            -1 se non inserisco il nodo nella lista.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Caso in cui mantengo i più vecchi nella KBucket List</span>
@@ -1265,21 +1303,42 @@ il primo elemento della lista alla fine.</p>
             <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-                <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">False</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Caso in cui metto i nuovi nella KBucketList</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c1"># Caso in cui inseriamo i nodi nuovi</span>
+        <span class="k">elif</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-                <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="mi">1</span>
             <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-                <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">return</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c1"># Caso random</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">return</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+                <span class="n">rand</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># Se rand è 0 mantengo il vecchio e scarto il nuovo. Il vecchio viene messo in fondo alla lista</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">rand</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="c1"># Se rand è 1 tolgo il vecchio e metto il nuovo</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 
     
     <span class="k">def</span> <span class="nf">getNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1514,44 +1573,81 @@ in un intero.</p>
     
   
     <div class="desc"><p>Inserimento all'interno della k Bucket List.
-Se la lista è piena controllo se il primo nodo è ancora attivo, se è attivo scarto il nuovo
-e sposto la testa in coda alla lista. Se non è più attivo elimino la testa 
-e metto in coda il nuovo nodo.</p>
+Ci sono due possibilità, se mode=1 allora vuol dire che quando inserisco un nuovo nodo
+devo controllare se la k-bucket list è piena, in quel caso non aggiungo il nuovo nodo.
+Se invece mode=0 allora, se la k-bucket list è piena tolgo il primo nodo della lista (che sarebbe il più vecchio)
+e aggiungo in fondo alla coda il nuovo nodo.
+Se c'è spazio nella coda aggiungo il nodo in fondo alla lista in entrambi i casi.</p>
 <p>Arguments:
-    node: Nodo da inserire nella k bucket list</p></div>
+    node: Nodo da inserire nella k bucket list
+Returns:
+    [Int] -- 1 se ho effettuato un inserimento nella lista e se aumento anche il numero di nodi
+    che sono contenuti all'interno della lista.
+    0 se inserisco il nuovo nodo nela lista sostituendo il vecchio, quindi non devo aumentare il numero 
+    di nodi che sono presenti nella lista.
+    -1 se non inserisco il nodo nella lista.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-src.KBucketList.kBucketList.insert', this);">Show source &equiv;</a></p>
   <div id="source-src.KBucketList.kBucketList.insert" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inserimento all&#39;interno della k Bucket List.</span>
-<span class="sd">    Se la lista è piena controllo se il primo nodo è ancora attivo, se è attivo scarto il nuovo</span>
-<span class="sd">    e sposto la testa in coda alla lista. Se non è più attivo elimino la testa </span>
-<span class="sd">    e metto in coda il nuovo nodo.</span>
+<span class="sd">    Ci sono due possibilità, se mode=1 allora vuol dire che quando inserisco un nuovo nodo</span>
+<span class="sd">    devo controllare se la k-bucket list è piena, in quel caso non aggiungo il nuovo nodo.</span>
+<span class="sd">    Se invece mode=0 allora, se la k-bucket list è piena tolgo il primo nodo della lista (che sarebbe il più vecchio)</span>
+<span class="sd">    e aggiungo in fondo alla coda il nuovo nodo.</span>
+<span class="sd">    Se c&#39;è spazio nella coda aggiungo il nodo in fondo alla lista in entrambi i casi.</span>
 <span class="sd">    </span>
 <span class="sd">    Arguments:</span>
 <span class="sd">        node: Nodo da inserire nella k bucket list</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        [Int] -- 1 se ho effettuato un inserimento nella lista e se aumento anche il numero di nodi</span>
+<span class="sd">        che sono contenuti all&#39;interno della lista.</span>
+<span class="sd">        0 se inserisco il nuovo nodo nela lista sostituendo il vecchio, quindi non devo aumentare il numero </span>
+<span class="sd">        di nodi che sono presenti nella lista.</span>
+<span class="sd">        -1 se non inserisco il nodo nella lista.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Caso in cui mantengo i più vecchi nella KBucket List</span>
     <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-            <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Caso in cui metto i nuovi nella KBucketList</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="c1"># Caso in cui inseriamo i nodi nuovi</span>
+    <span class="k">elif</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
         <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
-            <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="mi">1</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            
             <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="mi">0</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="c1"># Caso random</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">):</span>
+            <span class="n">rand</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Se rand è 0 mantengo il vecchio e scarto il nuovo. Il vecchio viene messo in fondo alla lista</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">rand</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="c1"># Se rand è 1 tolgo il vecchio e metto il nuovo</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 </pre></div>
 
   </div>
